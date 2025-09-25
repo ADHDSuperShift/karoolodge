@@ -921,12 +921,12 @@ const ComprehensiveAdmin: React.FC = () => {
           throw new Error('Upload to S3 failed');
         }
 
-        // CloudFront expects files at root level, not in folders
+        // CloudFront URL must match the actual S3 path (including folder)
         const cloudFrontBase = 'https://d64gsuwffb70l.cloudfront.net';
-        const correctedUrl = `${cloudFrontBase}/${uniqueFilename}`;
+        const correctedUrl = `${cloudFrontBase}/${folder}/${uniqueFilename}`;
         
         console.log('Original API URL:', publicUrl);
-        console.log('Corrected CloudFront URL (root level):', correctedUrl);
+        console.log('Corrected CloudFront URL (with folder):', correctedUrl);
 
         return correctedUrl;
       } catch (error) {
