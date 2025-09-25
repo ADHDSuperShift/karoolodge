@@ -1,45 +1,10 @@
 import React from 'react';
 import { Wine, ShoppingCart, Award, MapPin } from 'lucide-react';
+import { useGlobalState } from '../contexts/GlobalStateContext';
 
 const WineBoutiqueSection: React.FC = () => {
-  const wines = [
-    {
-      id: 1,
-      name: "Karoo Cabernet Sauvignon",
-      image: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528592120_cf63c543.webp",
-      vintage: "2021",
-      price: "R285",
-      region: "Route 62",
-      notes: "Full-bodied with blackcurrant and oak notes"
-    },
-    {
-      id: 2,
-      name: "Barrydale Chenin Blanc",
-      image: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528593828_73d944fd.webp",
-      vintage: "2022",
-      price: "R195",
-      region: "Klein Karoo",
-      notes: "Crisp and fresh with tropical fruit flavors"
-    },
-    {
-      id: 3,
-      name: "Route 62 Pinotage",
-      image: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528595529_41ddb688.webp",
-      vintage: "2020",
-      price: "R225",
-      region: "Route 62",
-      notes: "Smoky with plum and spice undertones"
-    },
-    {
-      id: 4,
-      name: "Karoo Reserve Blend",
-      image: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528598192_5cfeb00f.webp",
-      vintage: "2019",
-      price: "R350",
-      region: "Klein Karoo",
-      notes: "Premium blend with complex berry flavors"
-    }
-  ];
+  const { wineCollection, sectionBackgrounds } = useGlobalState();
+  const wineBoutiqueBackground = sectionBackgrounds.find(bg => bg.section === 'wine-boutique');
 
   return (
     <section id="wine" className="py-20 bg-gradient-to-br from-amber-50 to-orange-50">
@@ -49,8 +14,8 @@ const WineBoutiqueSection: React.FC = () => {
             Wine Boutique
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Discover exceptional wines from the Route 62 region and Klein Karoo. Our curated selection 
-            features local vintages that perfectly capture the terroir of this remarkable wine region.
+            Discover the finest selection of premium South African wines. Our curated collection 
+            features exceptional vintages that showcase the best of South Africa's renowned wine regions.
           </p>
         </div>
 
@@ -58,7 +23,7 @@ const WineBoutiqueSection: React.FC = () => {
           {/* Wine Shop Image */}
           <div className="relative">
             <img
-              src="https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp"
+              src={wineBoutiqueBackground?.imageUrl || "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp"}
               alt="Wine Boutique Interior"
               className="w-full h-96 object-cover rounded-xl shadow-lg"
             />
@@ -103,18 +68,18 @@ const WineBoutiqueSection: React.FC = () => {
             </div>
 
             <p className="text-gray-600 mb-6">
-              Our wine boutique features an expertly curated selection of wines from the renowned Route 62 
-              wine region. From crisp Chenin Blancs to robust Cabernet Sauvignons, each bottle tells the 
-              story of our unique terroir.
+              Our wine boutique features an expertly curated selection of premium South African wines. 
+              From crisp Chenin Blancs to robust Cabernet Sauvignons, each bottle represents the finest 
+              expressions of South Africa's diverse wine regions.
             </p>
 
             <div className="flex gap-4">
-              <button className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200">
-                Book Wine Tasting
-              </button>
-              <button className="border border-amber-600 text-amber-600 hover:bg-amber-600 hover:text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200">
-                Shop Online
-              </button>
+              <a 
+                href="#bar" 
+                className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 no-underline"
+              >
+                Next Wine Tasting
+              </a>
             </div>
           </div>
         </div>
@@ -125,7 +90,7 @@ const WineBoutiqueSection: React.FC = () => {
             Featured Wines
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {wines.map((wine) => (
+            {wineCollection.map((wine) => (
               <div key={wine.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 <div className="relative h-48">
                   <img
@@ -142,9 +107,9 @@ const WineBoutiqueSection: React.FC = () => {
                   <h4 className="font-serif font-semibold text-gray-900 mb-2">{wine.name}</h4>
                   <p className="text-sm text-gray-600 mb-2 flex items-center">
                     <MapPin className="w-3 h-3 mr-1" />
-                    {wine.region}
+                    {wine.origin || 'Klein Karoo, South Africa'}
                   </p>
-                  <p className="text-sm text-gray-600 mb-3">{wine.notes}</p>
+                  <p className="text-sm text-gray-600 mb-3">{wine.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-amber-600">{wine.price}</span>
                     <button className="bg-gray-100 hover:bg-amber-600 hover:text-white text-gray-700 px-3 py-1 rounded text-sm font-medium transition-colors duration-200">

@@ -1,0 +1,71 @@
+service: karoo-lodge-backend
+
+package:
+  patterns:
+    - 'handlers/**'
+    - '!node_modules/**'
+    - '!src/**'
+    - '!dist/**'
+    - '!.git/**'
+    - '!.serverless/**'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    S3_REGION: eu-west-1
+    COGNITO_USER_POOL_ID: us-east-1_fzogF46tc
+    S3_BUCKET: barrydale-media
+    UPLOAD_API_KEY: 79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            - s3:GetObjectAcl
+            - s3:PutObjectAcl
+            - s3:GetSignedUrl
+          Resource:
+            - arn:aws:s3:::barrydale-media/*
+
+functions:
+  getApiKey:
+    handler: handlers/auth.getApiKey
+    events:
+      - http:
+          path: api/get-api-key
+          method: post
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-API-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
+
+  getUploadUrl:
+    handler: handlers/upload.getUploadUrl
+    events:
+      - http:
+          path: api/upload-url
+          method: post
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-API-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
+
+# Using existing S3 bucket and CloudFront distribution
+# No additional resources needed since they already exist

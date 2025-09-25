@@ -1,20 +1,11 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useGlobalState } from '../contexts/GlobalStateContext';
 
 const GallerySection: React.FC = () => {
+  const { galleryImages } = useGlobalState();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState('all');
-
-  const images = [
-    { id: 1, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528577396_a70a7693.webp", category: 'rooms', title: 'Luxury Suite' },
-    { id: 2, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp", category: 'rooms', title: 'Karoo Cottage' },
-    { id: 3, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp", category: 'dining', title: 'Vintage Car Restaurant' },
-    { id: 4, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp", category: 'bar', title: 'Windpomp Bar' },
-    { id: 5, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp", category: 'wine', title: 'Wine Boutique' },
-    { id: 6, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528809003_d680fef6.webp", category: 'scenery', title: 'Karoo Landscape' },
-    { id: 7, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528810823_190418d4.webp", category: 'scenery', title: 'Mountain Views' },
-    { id: 8, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528813169_24c3c65c.webp", category: 'scenery', title: 'Sunset Vista' }
-  ];
 
   const filters = [
     { key: 'all', label: 'All Photos' },
@@ -26,8 +17,8 @@ const GallerySection: React.FC = () => {
   ];
 
   const filteredImages = activeFilter === 'all' 
-    ? images 
-    : images.filter(img => img.category === activeFilter);
+    ? galleryImages 
+    : galleryImages.filter(img => img.category === activeFilter);
 
   const openLightbox = (index: number) => {
     setSelectedImage(index);
@@ -57,7 +48,7 @@ const GallerySection: React.FC = () => {
             Photo Gallery
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Explore the beauty of Barrydale Karoo Boutique Hotel through our curated collection of images
+            Explore the beauty of Barrydale Klein Karoo Boutique Hotel through our curated collection of images
           </p>
         </div>
 
@@ -90,6 +81,9 @@ const GallerySection: React.FC = () => {
                 src={image.src}
                 alt={image.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                onError={(event) => {
+                  (event.currentTarget as HTMLImageElement).src = '/placeholder.svg';
+                }}
               />
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-end">
                 <div className="p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
@@ -129,6 +123,9 @@ const GallerySection: React.FC = () => {
                 src={filteredImages[selectedImage].src}
                 alt={filteredImages[selectedImage].title}
                 className="max-w-full max-h-full object-contain"
+                onError={(event) => {
+                  (event.currentTarget as HTMLImageElement).src = '/placeholder.svg';
+                }}
               />
               
               <div className="absolute bottom-4 left-4 text-white">

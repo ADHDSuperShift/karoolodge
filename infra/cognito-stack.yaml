@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cognito resources for Karoo Lodge admin authentication.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: karoo-lodge
+    Description: Prefix used for Cognito resource names.
+  AdminGroupName:
+    Type: String
+    Default: admin
+    Description: Cognito group that grants access to the admin console.
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "${ProjectName}-user-pool"
+      AliasAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+        InviteMessageTemplate:
+          EmailSubject: "Your Karoo Lodge admin invite"
+          EmailMessage: |
+            <p>Hello,</p>
+            <p>You have been invited to the Karoo Lodge admin console. Sign in with username <strong>{username}</strong>.</p>
+            <p>Temporary password: <strong>{####}</strong></p>
+            <p>Please reset your password at first login.</p>
+            <p>Regards,<br/>Karoo Lodge</p>
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "${ProjectName}-admin-client"
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      AllowedOAuthFlowsUserPoolClient: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+      RefreshTokenValidity: 30
+
+  AdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: !Ref AdminGroupName
+      Description: Administrators allowed to use the Karoo Lodge console.
+      UserPoolId: !Ref UserPool
+
+Outputs:
+  CognitoUserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+    Export:
+      Name: !Sub "${ProjectName}-user-pool-id"
+  CognitoUserPoolClientId:
+    Description: Cognito User Pool App Client ID
+    Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub "${ProjectName}-user-pool-client-id"
+  CognitoAdminGroup:
+    Description: Cognito admin group name
+    Value: !Ref AdminGroupName

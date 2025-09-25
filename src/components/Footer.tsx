@@ -1,28 +1,63 @@
 import React from 'react';
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useGlobalState } from '@/contexts/GlobalStateContext';
 
 const Footer: React.FC = () => {
+  const { siteContent } = useGlobalState();
+  const { contactInfo, socialMedia, logoUrl } = siteContent;
+
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-gray-900 dark:bg-gray-950 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Hotel Info */}
           <div>
-            <h3 className="text-2xl font-serif font-bold mb-4">
-              Barrydale Karoo
-              <span className="block text-lg font-light text-amber-400">Boutique Hotel</span>
-            </h3>
+            <div className="mb-4 flex items-center gap-3">
+              <img
+                src={logoUrl}
+                alt="Barrydale Karoo Boutique Hotel logo"
+                className="h-14 w-auto"
+                onError={(event) => {
+                  (event.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+              <div className="text-left">
+                <h3 className="text-2xl font-serif font-bold">
+                  Barrydale Karoo
+                  <span className="block text-lg font-light text-amber-400">Boutique Hotel</span>
+                </h3>
+              </div>
+            </div>
             <p className="text-gray-300 mb-6 leading-relaxed">
-              Experience authentic Karoo hospitality in our luxury boutique hotel on the famous Route 62.
+              Experience authentic Klein Karoo hospitality in our luxury boutique hotel on the famous Route 62.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-amber-400 transition-colors">
+              <a 
+                href={socialMedia.facebook} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-amber-400 transition-colors"
+                aria-label="Follow us on Facebook"
+              >
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-amber-400 transition-colors">
+              <a 
+                href={socialMedia.instagram} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-amber-400 transition-colors"
+                aria-label="Follow us on Instagram"
+              >
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-amber-400 transition-colors">
+              <a 
+                href={socialMedia.twitter} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-amber-400 transition-colors"
+                aria-label="Follow us on Twitter"
+              >
                 <Twitter className="w-5 h-5" />
               </a>
             </div>
@@ -46,11 +81,11 @@ const Footer: React.FC = () => {
             <h4 className="text-lg font-semibold mb-4">Services</h4>
             <ul className="space-y-2 text-gray-300">
               <li>Luxury Accommodation</li>
-              <li>Fine Dining Restaurant</li>
+              <li>Restaurant</li>
+              <li>Bar & Lounge</li>
               <li>Wine Tastings</li>
               <li>Private Events</li>
-              <li>Conference Facilities</li>
-              <li>Spa Services</li>
+              <li>Wine Boutique</li>
             </ul>
           </div>
 
@@ -60,19 +95,19 @@ const Footer: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center">
                 <Phone className="w-4 h-4 text-amber-400 mr-3" />
-                <span className="text-gray-300">+27 28 572 1012</span>
+                <span className="text-gray-300">{contactInfo.phone}</span>
+              </div>
+              <div className="flex items-center">
+                <Phone className="w-4 h-4 text-amber-400 mr-3" />
+                <span className="text-gray-300">24/7 Emergency Contact Available</span>
               </div>
               <div className="flex items-center">
                 <Mail className="w-4 h-4 text-amber-400 mr-3" />
-                <span className="text-gray-300">info@barrydalekaroo.com</span>
+                <span className="text-gray-300">{contactInfo.email}</span>
               </div>
               <div className="flex items-start">
                 <MapPin className="w-4 h-4 text-amber-400 mr-3 mt-1" />
-                <div className="text-gray-300">
-                  <p>123 Route 62</p>
-                  <p>Barrydale, 6750</p>
-                  <p>Western Cape</p>
-                </div>
+                <div className="text-gray-300 whitespace-pre-line">{contactInfo.address}</div>
               </div>
             </div>
           </div>
@@ -99,12 +134,13 @@ const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © 2024 Barrydale Karoo Boutique Hotel. All rights reserved.
+            © 2024 Barrydale Klein Karoo Boutique Hotel. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">Terms of Service</a>
-            <a href="#" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">Cookie Policy</a>
+            <Link to="/privacy-policy" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">Terms of Service</Link>
+            <Link to="/cookie-policy" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">Cookie Policy</Link>
+            <Link to="/admin" className="text-amber-400 hover:text-amber-300 text-sm font-medium transition-colors">Admin</Link>
           </div>
         </div>
       </div>

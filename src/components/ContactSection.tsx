@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react';
+import { useGlobalState } from '@/contexts/GlobalStateContext';
 
 const ContactSection: React.FC = () => {
+  const { siteContent } = useGlobalState();
+  const { contactInfo } = siteContent;
+  const addressLines = useMemo(
+    () => (contactInfo.address ? contactInfo.address.split('\n') : []),
+    [contactInfo.address]
+  );
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,30 +30,32 @@ const ContactSection: React.FC = () => {
     });
   };
 
+  const encodedAddress = encodeURIComponent((contactInfo.address || '11 Tennant Street Barrydale South Africa').replace(/\n/g, ' '));
+  const mapSrc = `https://www.google.com/maps?q=${encodedAddress}&output=embed`;
+
   return (
-    <section id="contact" className="py-20 bg-gray-50">
+    <section id="contact" className="py-20 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-serif font-light text-gray-900 mb-4">
+          <h2 className="text-4xl md:text-5xl font-serif font-light text-gray-900 dark:text-white mb-4">
             Contact Us
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Ready to experience the magic of the Karoo? Get in touch with us to plan your perfect getaway.
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            Ready to experience the magic of the Klein Karoo? Get in touch with us to plan your perfect getaway.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Information */}
           <div>
-            <h3 className="text-2xl font-serif font-semibold text-gray-900 mb-8">Get in Touch</h3>
+            <h3 className="text-2xl font-serif font-semibold text-gray-900 dark:text-white mb-8">Get in Touch</h3>
             
             <div className="space-y-6 mb-8">
-              <div className="flex items-start">
+                            <div className="flex items-start">
                 <Phone className="w-6 h-6 text-amber-600 mr-4 mt-1" />
                 <div>
                   <h4 className="font-semibold text-gray-900">Phone</h4>
-                  <p className="text-gray-600">+27 28 572 1012</p>
-                  <p className="text-gray-600">+27 82 555 0123 (Mobile)</p>
+                  <p className="text-gray-600">{contactInfo.phone || '028 572 1020'}</p>
                 </div>
               </div>
               
@@ -53,8 +63,7 @@ const ContactSection: React.FC = () => {
                 <Mail className="w-6 h-6 text-amber-600 mr-4 mt-1" />
                 <div>
                   <h4 className="font-semibold text-gray-900">Email</h4>
-                  <p className="text-gray-600">info@barrydalekaroo.com</p>
-                  <p className="text-gray-600">bookings@barrydalekaroo.com</p>
+                  <p className="text-gray-600">{contactInfo.email || 'info@barrydalekaroolodge.co.za'}</p>
                 </div>
               </div>
               
@@ -62,9 +71,19 @@ const ContactSection: React.FC = () => {
                 <MapPin className="w-6 h-6 text-amber-600 mr-4 mt-1" />
                 <div>
                   <h4 className="font-semibold text-gray-900">Address</h4>
-                  <p className="text-gray-600">123 Route 62</p>
-                  <p className="text-gray-600">Barrydale, 6750</p>
-                  <p className="text-gray-600">Western Cape, South Africa</p>
+                  {addressLines.length > 0 ? (
+                    addressLines.map((line, index) => (
+                      <p key={index} className="text-gray-600">
+                        {line}
+                      </p>
+                    ))
+                  ) : (
+                    <>
+                      <p className="text-gray-600">11 Tennant Street</p>
+                      <p className="text-gray-600">Barrydale, Western Cape</p>
+                      <p className="text-gray-600">South Africa, 6750</p>
+                    </>
+                  )}
                 </div>
               </div>
               
@@ -79,12 +98,15 @@ const ContactSection: React.FC = () => {
             </div>
 
             {/* Map Placeholder */}
-            <div className="bg-gray-200 rounded-xl h-64 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <MapPin className="w-12 h-12 mx-auto mb-2" />
-                <p>Interactive Map</p>
-                <p className="text-sm">Google Maps Integration</p>
-              </div>
+            <div className="overflow-hidden rounded-xl border border-gray-200 shadow-inner">
+              <iframe
+                title="Barrydale Karoo Boutique Hotel location"
+                src={mapSrc}
+                className="h-64 w-full border-0"
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </div>
 
