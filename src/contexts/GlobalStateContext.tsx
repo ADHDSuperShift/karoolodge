@@ -663,19 +663,35 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
     };
   };
 
-  const [state, setState] = useState<GlobalState>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('karoo-lodge-state');
-      if (saved) {
-        try {
-          return hydrateState(JSON.parse(saved));
-        } catch (e) {
-          console.error('Failed to parse saved state:', e);
-        }
+  const [state, setState] = useState<GlobalState>(defaultState);
+  // Hydrate from localStorage or backend
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('karoo-lodge-state');
+    if (saved) {
+      try {
+        setState(hydrateState(JSON.parse(saved)));
+        return;
+      } catch (e) {
+        console.error('Failed to parse saved state:', e);
       }
     }
-    return defaultState;
-  });
+    // If no localStorage, fetch from backend
+    fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/gallery', {
+      headers: {
+        'x-api-key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length) {
+          setState(prev => ({ ...prev, galleryImages: data }));
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch gallery images from backend', err);
+      });
+  }, []);
 
   // Save to localStorage whenever state changes
   useEffect(() => {
