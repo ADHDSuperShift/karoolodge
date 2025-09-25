@@ -1211,7 +1211,7 @@ const ComprehensiveAdmin: React.FC = () => {
       if (!file) return;
 
       try {
-        const publicUrl = await uploadFileToS3(file, `backgrounds/${section}`);
+        const publicUrl = await uploadFileToS3(file, 'backgrounds');
         updateSectionBackground({
           section,
           imageUrl: publicUrl,
