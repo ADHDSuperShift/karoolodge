@@ -664,19 +664,9 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
   };
 
   const [state, setState] = useState<GlobalState>(defaultState);
-  // Hydrate from localStorage or backend
+  // Hydrate gallery from backend only
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const saved = localStorage.getItem('karoo-lodge-state');
-    if (saved) {
-      try {
-        setState(hydrateState(JSON.parse(saved)));
-        return;
-      } catch (e) {
-        console.error('Failed to parse saved state:', e);
-      }
-    }
-    // If no localStorage, fetch from backend
     fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/gallery', {
       headers: {
         'x-api-key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
@@ -692,49 +682,6 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
         console.error('Failed to fetch gallery images from backend', err);
       });
   }, []);
-
-  // Save to localStorage whenever state changes
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    console.log('State changed, saving to localStorage:', {
-      galleryImages: state.galleryImages.length,
-      sectionBackgrounds: state.sectionBackgrounds.length,
-      wineCollection: state.wineCollection.length
-    });
-
-    try {
-      const serialized = JSON.stringify(state);
-
-      if (serialized.length > 4_500_000) {
-        console.warn('Global state exceeds 4.5MB; skipping localStorage write to avoid quota errors.');
-        window.dispatchEvent(
-          new CustomEvent('karoo-storage-warning', {
-            detail: {
-              size: serialized.length,
-              message:
-                'Your content changes are too large to save offline. Please reduce image sizes or use hosted URLs.'
-            }
-          })
-        );
-        return;
-      }
-
-      localStorage.setItem('karoo-lodge-state', serialized);
-    } catch (error) {
-      console.error('Failed to persist state to localStorage', error);
-      window.dispatchEvent(
-        new CustomEvent('karoo-storage-warning', {
-          detail: {
-            size: 0,
-            message: 'We could not save your changes locally. Please try smaller images or hosted URLs.'
-          }
-        })
-      );
-    }
-  }, [state]);
 
   // Gallery management functions
   const updateGalleryImages = (images: GalleryImage[]) => {
