@@ -918,13 +918,27 @@ const ComprehensiveAdmin: React.FC = () => {
 
         const { uploadURL: uploadUrl, fileUrl: publicUrl } = await response.json();
 
+        console.log('Upload API Response:', { uploadUrl, publicUrl });
+        console.log('File details:', { name: file.name, size: file.size, type: file.type });
+
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
-          body: file // File or Blob
+          body: file,
+          headers: {
+            'Content-Type': file.type
+          }
+        });
+
+        console.log('S3 Upload Response:', {
+          status: uploadResponse.status,
+          statusText: uploadResponse.statusText,
+          ok: uploadResponse.ok
         });
 
         if (!uploadResponse.ok) {
-          throw new Error('Upload to S3 failed');
+          const errorText = await uploadResponse.text();
+          console.error('S3 Upload Error Details:', errorText);
+          throw new Error(`Upload to S3 failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
         }
 
         // CloudFront URL must match the actual S3 path (including folder)
@@ -933,6 +947,20 @@ const ComprehensiveAdmin: React.FC = () => {
         
         console.log('Original API URL:', publicUrl);
         console.log('Corrected CloudFront URL (with folder):', correctedUrl);
+        console.log('Upload completed successfully to:', uploadUrl);
+
+        // Test if the file is immediately accessible (may fail due to propagation delay)
+        setTimeout(async () => {
+          try {
+            const testResponse = await fetch(correctedUrl, { method: 'HEAD' });
+            console.log(`File accessibility test for ${correctedUrl}:`, {
+              status: testResponse.status,
+              accessible: testResponse.ok
+            });
+          } catch (e) {
+            console.log('File accessibility test failed (this is normal immediately after upload):', e);
+          }
+        }, 1000);
 
         return correctedUrl;
       } catch (error) {
