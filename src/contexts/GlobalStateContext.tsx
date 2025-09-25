@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { buildCdnUrl } from '@/utils/cdn';
 
 // Define all the interfaces
 interface GalleryImage {
@@ -114,39 +115,41 @@ interface GlobalStateContextType extends GlobalState {
 }
 
 // Default state
+const cdn = (path: string) => buildCdnUrl(path);
+
 const defaultState: GlobalState = {
   galleryImages: [
-    { id: 1, src: "/placeholder.svg", category: 'rooms', title: 'Luxury Suite' },
-    { id: 2, src: "/placeholder.svg", category: 'rooms', title: 'Klein Karoo Cottage' },
-    { id: 3, src: "/placeholder.svg", category: 'dining', title: 'Vintage Car Restaurant' },
-    { id: 4, src: "/placeholder.svg", category: 'bar', title: 'Windpomp Bar' },
-    { id: 5, src: "/placeholder.svg", category: 'wine', title: 'Wine Boutique' },
-    { id: 6, src: "/placeholder.svg", category: 'scenery', title: 'Klein Karoo Landscape' },
-    { id: 7, src: "/placeholder.svg", category: 'scenery', title: 'Mountain Views' },
-    { id: 8, src: "/placeholder.svg", category: 'scenery', title: 'Sunset Vista' }
+    { id: 1, src: cdn('68d104194c27c84c671a33c8_1758528577396_a70a7693.webp'), category: 'rooms', title: 'Luxury Suite' },
+    { id: 2, src: cdn('68d104194c27c84c671a33c8_1758528579398_fe84a640.webp'), category: 'rooms', title: 'Klein Karoo Cottage' },
+    { id: 3, src: cdn('68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp'), category: 'dining', title: 'Vintage Car Restaurant' },
+    { id: 4, src: cdn('68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp'), category: 'bar', title: 'Windpomp Bar' },
+    { id: 5, src: cdn('68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp'), category: 'wine', title: 'Wine Boutique' },
+    { id: 6, src: cdn('68d104194c27c84c671a33c8_1758528809003_d680fef6.webp'), category: 'scenery', title: 'Klein Karoo Landscape' },
+    { id: 7, src: cdn('68d104194c27c84c671a33c8_1758528810823_190418d4.webp'), category: 'scenery', title: 'Mountain Views' },
+    { id: 8, src: cdn('68d104194c27c84c671a33c8_1758528813169_24c3c65c.webp'), category: 'scenery', title: 'Sunset Vista' }
   ],
   sectionBackgrounds: [
     {
       section: 'hero',
-      imageUrl: '/placeholder.svg',
+      imageUrl: cdn('68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp'),
       title: 'Hero Background',
       description: 'Main hero section background showcasing Klein Karoo beauty'
     },
     {
       section: 'restaurant',
-      imageUrl: '/placeholder.svg',
+      imageUrl: cdn('68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp'),
       title: 'Restaurant Background',
       description: 'Vintage car restaurant atmosphere'
     },
     {
       section: 'wine-boutique',
-      imageUrl: '/placeholder.svg',
+      imageUrl: cdn('68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp'),
       title: 'Wine Boutique Background',
       description: 'Wine cellar and boutique ambiance'
     },
     {
       section: 'bar-events',
-      imageUrl: '/placeholder.svg',
+      imageUrl: cdn('68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp'),
       title: 'Bar & Events Background',
       description: 'Windpomp bar and event space'
     }
@@ -158,7 +161,7 @@ const defaultState: GlobalState = {
       vintage: "2020",
       price: "R450",
       description: "Full-bodied red wine with rich tannins and notes of blackcurrant and oak",
-      image: "/placeholder.svg",
+      image: cdn('68d104194c27c84c671a33c8_1758528592120_cf63c543.webp'),
       category: 'red',
       origin: "Klein Karoo, South Africa"
     },
@@ -168,7 +171,7 @@ const defaultState: GlobalState = {
       vintage: "2022",
       price: "R320",
       description: "Crisp white wine with citrus notes and a mineral finish",
-      image: "/placeholder.svg",
+      image: cdn('68d104194c27c84c671a33c8_1758528593828_73d944fd.webp'),
       category: 'white',
       origin: "Western Cape, South Africa"
     },
@@ -178,7 +181,7 @@ const defaultState: GlobalState = {
       vintage: "2023",
       price: "R290",
       description: "Light and refreshing rosé with strawberry and peach flavors",
-      image: "/placeholder.svg",
+      image: cdn('68d104194c27c84c671a33c8_1758528595529_41ddb688.webp'),
       category: 'rosé',
       origin: "Barrydale, Western Cape"
     },
@@ -188,7 +191,7 @@ const defaultState: GlobalState = {
       vintage: "2021",
       price: "R480",
       description: "Elegant sparkling wine perfect for celebrations",
-      image: "/placeholder.svg",
+      image: cdn('68d104194c27c84c671a33c8_1758528598192_5cfeb00f.webp'),
       category: 'sparkling',
       origin: "Robertson Valley, South Africa"
     }
@@ -199,9 +202,9 @@ const defaultState: GlobalState = {
       name: "Aloe Ferox",
       category: "Standard Twin Room",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        cdn('68d104194c27c84c671a33c8_1758528577396_a70a7693.webp'),
+        cdn('68d104194c27c84c671a33c8_1758528579398_fe84a640.webp'),
+        cdn('68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp')
       ],
       price: "R1,200",
       guests: 2,
@@ -233,9 +236,9 @@ const defaultState: GlobalState = {
       name: "Agapanthus",
       category: "Standard Twin Room (Accessible)",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        cdn('68d104194c27c84c671a33c8_1758528809003_d680fef6.webp'),
+        cdn('68d104194c27c84c671a33c8_1758528810823_190418d4.webp'),
+        cdn('68d104194c27c84c671a33c8_1758528813169_24c3c65c.webp')
       ],
       price: "R1,200",
       guests: 2,
@@ -664,15 +667,29 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
   };
 
   const [state, setState] = useState<GlobalState>(defaultState);
-  // Hydrate gallery from backend only
+  // Hydrate gallery from backend only when an endpoint is configured
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/gallery', {
+
+    const endpoint = import.meta.env.VITE_GALLERY_ENDPOINT as string | undefined;
+    if (!endpoint) {
+      return;
+    }
+
+    const apiKey = import.meta.env.VITE_GALLERY_API_KEY as string | undefined;
+
+    fetch(endpoint, {
+      mode: 'cors',
       headers: {
-        'x-api-key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
+        ...(apiKey ? { 'x-api-key': apiKey } : {})
       }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Gallery request failed with status ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data) && data.length) {
           setState(prev => ({ ...prev, galleryImages: data }));

@@ -916,7 +916,7 @@ const ComprehensiveAdmin: React.FC = () => {
           throw new Error('Failed to request upload URL');
         }
 
-        const { uploadURL: uploadUrl, fileUrl: publicUrl } = await response.json();
+        const { uploadURL: uploadUrl, fileUrl: fileUrlFromApi } = await response.json();
 
         console.log('📤 Uploading:', uniqueFilename, 'to folder:', folder);
 
@@ -936,13 +936,18 @@ const ComprehensiveAdmin: React.FC = () => {
 
         console.log('✅ Upload successful!');
 
-        // Use S3 direct URLs until CloudFront is set up
-        const s3Base = 'https://barrydale-media.s3.eu-west-1.amazonaws.com';
-        const correctedUrl = `${s3Base}/${folder}/${uniqueFilename}`;
-        
-        console.log('🌐 S3 Direct URL:', correctedUrl);
+        const s3Base = fileUrlFromApi?.replace(/^(https:\/\/[^/]+).*/, '$1') || 'https://barrydale-media.s3.eu-west-1.amazonaws.com';
+        const normalizedFolder = folder.replace(/^\/+|\/+$/g, '');
+        const s3Url = fileUrlFromApi ?? `${s3Base}/${normalizedFolder ? `${normalizedFolder}/` : ''}${uniqueFilename}`;
 
-        return correctedUrl;
+        const cdnBase = import.meta.env.VITE_CLOUDFRONT_URL?.replace(/\/$/, '');
+        const finalUrl = cdnBase
+          ? s3Url.replace(/^https:\/\/[^/]+/, cdnBase)
+          : s3Url;
+
+        console.log('🌐 Final media URL:', finalUrl);
+
+        return finalUrl;
       } catch (error) {
         console.error('Upload error', error);
         toast({
