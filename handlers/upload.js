@@ -65,7 +65,10 @@ exports.getUploadUrl = async (event) => {
         const uploadURL = await getSignedUrl(s3Client, command, { expiresIn: 300 });
 
         const region = process.env.S3_REGION || 'eu-west-1';
-        const fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+        const cloudfrontDomain = (process.env.CLOUDFRONT_URL || process.env.VITE_CLOUDFRONT_URL || '').replace(/\/$/, '');
+        const fileUrl = cloudfrontDomain
+            ? `${cloudfrontDomain}/${key}`
+            : `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
 
         return {
             statusCode: 200,
