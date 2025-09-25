@@ -916,17 +916,19 @@ const ComprehensiveAdmin: React.FC = () => {
           throw new Error('Upload to S3 failed');
         }
 
-        // Fix: Construct proper CloudFront URL with folder path
+        // Fix: Construct proper CloudFront URL at root level (no folder path)
         const cloudFrontBase = 'https://d64gsuwffb70l.cloudfront.net';
         
         // Generate a unique filename to avoid conflicts
         const timestamp = Date.now();
         const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const uniqueFilename = `${timestamp}_${sanitizedName}`;
-        const correctedUrl = `${cloudFrontBase}/${folder}/${uniqueFilename}`;
+        
+        // CloudFront expects files at root level, not in folders
+        const correctedUrl = `${cloudFrontBase}/${uniqueFilename}`;
         
         console.log('Original API URL:', publicUrl);
-        console.log('Corrected CloudFront URL:', correctedUrl);
+        console.log('Corrected CloudFront URL (root level):', correctedUrl);
 
         return correctedUrl;
       } catch (error) {
