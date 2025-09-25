@@ -9,6 +9,8 @@ applications:
           commands:
             - npm run build
             - cp public/_redirects dist/_redirects
+            - echo "Redirects file copied to dist directory"
+            - ls -la dist/_redirects
       artifacts:
         baseDirectory: dist
         files:
