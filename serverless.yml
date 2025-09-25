@@ -95,5 +95,17 @@ functions:
           method: options
           cors: true
 
-# Using existing S3 bucket and CloudFront distribution
-# No additional resources needed since they already exist
+
+resources:
+  Resources:
+    MediaFilesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: MediaFiles
+        AttributeDefinitions:
+          - AttributeName: fileUrl
+            AttributeType: S
+        KeySchema:
+          - AttributeName: fileUrl
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
