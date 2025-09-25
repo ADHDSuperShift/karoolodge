@@ -888,6 +888,11 @@ const ComprehensiveAdmin: React.FC = () => {
           throw new Error('Missing upload credentials. Please sign in again.');
         }
 
+        // Generate unique filename BEFORE making API request
+        const timestamp = Date.now();
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const uniqueFilename = `${timestamp}_${sanitizedName}`;
+
         const response = await fetch(uploadEndpoint, {
           method: 'POST',
           headers: {
@@ -895,7 +900,7 @@ const ComprehensiveAdmin: React.FC = () => {
             'x-api-key': apiKey
           },
           body: JSON.stringify({
-            filename: file.name,
+            filename: uniqueFilename, // Use the unique filename consistently
             contentType: file.type,
             folder
           })
@@ -916,15 +921,8 @@ const ComprehensiveAdmin: React.FC = () => {
           throw new Error('Upload to S3 failed');
         }
 
-        // Fix: Construct proper CloudFront URL at root level (no folder path)
-        const cloudFrontBase = 'https://d64gsuwffb70l.cloudfront.net';
-        
-        // Generate a unique filename to avoid conflicts
-        const timestamp = Date.now();
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const uniqueFilename = `${timestamp}_${sanitizedName}`;
-        
         // CloudFront expects files at root level, not in folders
+        const cloudFrontBase = 'https://d64gsuwffb70l.cloudfront.net';
         const correctedUrl = `${cloudFrontBase}/${uniqueFilename}`;
         
         console.log('Original API URL:', publicUrl);
