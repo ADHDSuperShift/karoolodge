@@ -199,7 +199,7 @@ const defaultState: GlobalState = {
       name: "Aloe Ferox",
       category: "Standard Twin Room",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528533631_8c04f56d.webp",
+        "/placeholder.svg",
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528582334_be1169ab.webp",
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528553663_af1ebacf.webp"
       ],
@@ -272,7 +272,7 @@ const defaultState: GlobalState = {
       images: [
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528582334_be1169ab.webp",
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528533631_8c04f56d.webp"
+        "/placeholder.svg"
       ],
       price: "R1,200",
       guests: 2,
@@ -308,7 +308,7 @@ const defaultState: GlobalState = {
       category: "Luxury King Room (Accessible)",
       images: [
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528553663_af1ebacf.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528533631_8c04f56d.webp",
+        "/placeholder.svg",
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp"
       ],
       price: "R1,800",
@@ -347,7 +347,7 @@ const defaultState: GlobalState = {
       images: [
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528570707_b59abaa6.webp",
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528533631_8c04f56d.webp"
+        "/placeholder.svg"
       ],
       price: "R1,800",
       guests: 2,
@@ -384,7 +384,7 @@ const defaultState: GlobalState = {
       images: [
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp",
         "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528533631_8c04f56d.webp"
+        "/placeholder.svg"
       ],
       price: "R2,000",
       guests: 2,
