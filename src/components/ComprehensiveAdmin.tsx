@@ -1730,6 +1730,7 @@ const ComprehensiveAdmin: React.FC = () => {
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.35em] text-amber-600">Barrydale Karoo Lodge</p>
             <h1 className="text-2xl font-semibold text-slate-900">Content & Media Console</h1>
+            <p className="text-xs text-slate-500">v2.0.0 - Full Admin System</p>
           </div>
           <Button variant="outline" className="gap-2" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" /> Sign out
