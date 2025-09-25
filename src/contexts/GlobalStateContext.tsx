@@ -128,25 +128,25 @@ const defaultState: GlobalState = {
   sectionBackgrounds: [
     {
       section: 'hero',
-      imageUrl: '/placeholder.svg
+      imageUrl: '/placeholder.svg',
       title: 'Hero Background',
       description: 'Main hero section background showcasing Klein Karoo beauty'
     },
     {
       section: 'restaurant',
-      imageUrl: '/placeholder.svg
+      imageUrl: '/placeholder.svg',
       title: 'Restaurant Background',
       description: 'Vintage car restaurant atmosphere'
     },
     {
       section: 'wine-boutique',
-      imageUrl: '/placeholder.svg
+      imageUrl: '/placeholder.svg',
       title: 'Wine Boutique Background',
       description: 'Wine cellar and boutique ambiance'
     },
     {
       section: 'bar-events',
-      imageUrl: '/placeholder.svg
+      imageUrl: '/placeholder.svg',
       title: 'Bar & Events Background',
       description: 'Windpomp bar and event space'
     }
