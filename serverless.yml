@@ -48,7 +48,7 @@ provider:
 
 functions:
   getApiKey:
-    handler: getApiKey.getApiKey
+    handler: handlers/auth.getApiKey
     events:
       - http:
           path: api/get-api-key
@@ -60,7 +60,7 @@ functions:
           cors: true
 
   getUploadUrl:
-    handler: getUploadUrl.getUploadUrl
+    handler: handlers/upload.getUploadUrl
     events:
       - http:
           path: api/upload-url
@@ -72,7 +72,7 @@ functions:
           cors: true
 
   saveImage:
-    handler: saveImage.saveImage
+    handler: handlers/saveImage.saveImage
     events:
       - http:
           path: api/save-image
@@ -84,7 +84,7 @@ functions:
           cors: true
 
   listImages:
-    handler: listImages.listImages
+    handler: handlers/listImages.listImages
     events:
       - http:
           path: api/list-images
