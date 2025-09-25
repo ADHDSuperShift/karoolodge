@@ -116,37 +116,37 @@ interface GlobalStateContextType extends GlobalState {
 // Default state
 const defaultState: GlobalState = {
   galleryImages: [
-    { id: 1, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528577396_a70a7693.webp", category: 'rooms', title: 'Luxury Suite' },
-    { id: 2, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp", category: 'rooms', title: 'Klein Karoo Cottage' },
-    { id: 3, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp", category: 'dining', title: 'Vintage Car Restaurant' },
-    { id: 4, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp", category: 'bar', title: 'Windpomp Bar' },
-    { id: 5, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp", category: 'wine', title: 'Wine Boutique' },
-    { id: 6, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528809003_d680fef6.webp", category: 'scenery', title: 'Klein Karoo Landscape' },
-    { id: 7, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528810823_190418d4.webp", category: 'scenery', title: 'Mountain Views' },
-    { id: 8, src: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528813169_24c3c65c.webp", category: 'scenery', title: 'Sunset Vista' }
+    { id: 1, src: "/placeholder.svg", category: 'rooms', title: 'Luxury Suite' },
+    { id: 2, src: "/placeholder.svg", category: 'rooms', title: 'Klein Karoo Cottage' },
+    { id: 3, src: "/placeholder.svg", category: 'dining', title: 'Vintage Car Restaurant' },
+    { id: 4, src: "/placeholder.svg", category: 'bar', title: 'Windpomp Bar' },
+    { id: 5, src: "/placeholder.svg", category: 'wine', title: 'Wine Boutique' },
+    { id: 6, src: "/placeholder.svg", category: 'scenery', title: 'Klein Karoo Landscape' },
+    { id: 7, src: "/placeholder.svg", category: 'scenery', title: 'Mountain Views' },
+    { id: 8, src: "/placeholder.svg", category: 'scenery', title: 'Sunset Vista' }
   ],
   sectionBackgrounds: [
     {
       section: 'hero',
-      imageUrl: 'https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp',
+      imageUrl: '/placeholder.svg
       title: 'Hero Background',
       description: 'Main hero section background showcasing Klein Karoo beauty'
     },
     {
       section: 'restaurant',
-      imageUrl: 'https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp',
+      imageUrl: '/placeholder.svg
       title: 'Restaurant Background',
       description: 'Vintage car restaurant atmosphere'
     },
     {
       section: 'wine-boutique',
-      imageUrl: 'https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp',
+      imageUrl: '/placeholder.svg
       title: 'Wine Boutique Background',
       description: 'Wine cellar and boutique ambiance'
     },
     {
       section: 'bar-events',
-      imageUrl: 'https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp',
+      imageUrl: '/placeholder.svg
       title: 'Bar & Events Background',
       description: 'Windpomp bar and event space'
     }
@@ -158,7 +158,7 @@ const defaultState: GlobalState = {
       vintage: "2020",
       price: "R450",
       description: "Full-bodied red wine with rich tannins and notes of blackcurrant and oak",
-      image: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528592120_cf63c543.webp",
+      image: "/placeholder.svg",
       category: 'red',
       origin: "Klein Karoo, South Africa"
     },
@@ -168,7 +168,7 @@ const defaultState: GlobalState = {
       vintage: "2022",
       price: "R320",
       description: "Crisp white wine with citrus notes and a mineral finish",
-      image: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528593828_73d944fd.webp",
+      image: "/placeholder.svg",
       category: 'white',
       origin: "Western Cape, South Africa"
     },
@@ -178,7 +178,7 @@ const defaultState: GlobalState = {
       vintage: "2023",
       price: "R290",
       description: "Light and refreshing rosé with strawberry and peach flavors",
-      image: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528595529_41ddb688.webp",
+      image: "/placeholder.svg",
       category: 'rosé',
       origin: "Barrydale, Western Cape"
     },
@@ -188,7 +188,7 @@ const defaultState: GlobalState = {
       vintage: "2021",
       price: "R480",
       description: "Elegant sparkling wine perfect for celebrations",
-      image: "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528598192_5cfeb00f.webp",
+      image: "/placeholder.svg",
       category: 'sparkling',
       origin: "Robertson Valley, South Africa"
     }
@@ -200,8 +200,8 @@ const defaultState: GlobalState = {
       category: "Standard Twin Room",
       images: [
         "/placeholder.svg",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528582334_be1169ab.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528553663_af1ebacf.webp"
+        "/placeholder.svg",
+        "/placeholder.svg"
       ],
       price: "R1,200",
       guests: 2,
@@ -233,9 +233,9 @@ const defaultState: GlobalState = {
       name: "Agapanthus",
       category: "Standard Twin Room (Accessible)",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528553663_af1ebacf.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528582334_be1169ab.webp"
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg"
       ],
       price: "R1,200",
       guests: 2,
@@ -270,8 +270,8 @@ const defaultState: GlobalState = {
       name: "Botterboom",
       category: "Standard Twin Room (Accessible)",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528582334_be1169ab.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp",
+        "/placeholder.svg",
+        "/placeholder.svg",
         "/placeholder.svg"
       ],
       price: "R1,200",
@@ -307,9 +307,9 @@ const defaultState: GlobalState = {
       name: "Geelkatstert",
       category: "Luxury King Room (Accessible)",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528553663_af1ebacf.webp",
         "/placeholder.svg",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp"
+        "/placeholder.svg",
+        "/placeholder.svg"
       ],
       price: "R1,800",
       guests: 2,
@@ -345,8 +345,8 @@ const defaultState: GlobalState = {
       name: "Vygie",
       category: "Luxury King Room",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528570707_b59abaa6.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp",
+        "/placeholder.svg",
+        "/placeholder.svg",
         "/placeholder.svg"
       ],
       price: "R1,800",
@@ -382,8 +382,8 @@ const defaultState: GlobalState = {
       name: "Gousblom",
       category: "Superior King Room",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp",
+        "/placeholder.svg",
+        "/placeholder.svg",
         "/placeholder.svg"
       ],
       price: "R2,000",
@@ -420,9 +420,9 @@ const defaultState: GlobalState = {
       name: "Buchu",
       category: "Superior King Room",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528570707_b59abaa6.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528553663_af1ebacf.webp"
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg"
       ],
       price: "R2,000",
       guests: 2,
@@ -458,9 +458,9 @@ const defaultState: GlobalState = {
       name: "Arum Lily",
       category: "Superior King Room",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528582334_be1169ab.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528531865_3a62b23c.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528570707_b59abaa6.webp"
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg"
       ],
       price: "R2,200",
       guests: 2,
@@ -496,9 +496,9 @@ const defaultState: GlobalState = {
       name: "Protea",
       category: "Superior King Room",
       images: [
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528577396_a70a7693.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp",
-        "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528581314_da77209e.webp"
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg"
       ],
       price: "R2,200",
       guests: 2,
