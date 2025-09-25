@@ -19,6 +19,13 @@ Go to **App settings** → **Environment variables** in your Amplify app and add
 2. Go to **App settings** → **Build settings** 
 3. Click **Redeploy this version** to trigger a new build with the environment variables
 
+## SPA Routing Fix
+
+The latest deployment includes:
+- ✅ `_redirects` file for proper client-side routing
+- ✅ Updated `amplify.yml` with SPA configuration
+- ✅ Fixed 404 errors when accessing `/admin` directly
+
 ## Admin Access
 
 Once deployed, access the admin dashboard at: `https://your-app-url.amplifyapp.com/admin`
