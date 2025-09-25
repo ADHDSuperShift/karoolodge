@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Test - Detailed Debugging</title>
+</head>
+<body>
+    <h1>🔍 Upload Process Debugging</h1>
+    
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="testUpload()">TEST UPLOAD</button>
+    <button onclick="testAPI()">TEST API ONLY</button>
+    
+    <div id="status"></div>
+    <div id="details"></div>
+    
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = `<p>${message}</p>`;
+            console.log(message);
+        }
+        
+        function updateDetails(content) {
+            document.getElementById('details').innerHTML = `<pre>${content}</pre>`;
+        }
+        
+        async function testAPI() {
+            updateStatus('🧪 Testing API endpoint...');
+            
+            try {
+                const response = await fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/upload-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
+                    },
+                    body: JSON.stringify({
+                        filename: 'test-debug.jpg',
+                        contentType: 'image/jpeg',
+                        folder: 'rooms'
+                    })
+                });
+                
+                const data = await response.json();
+                updateStatus('✅ API Response received');
+                updateDetails(JSON.stringify(data, null, 2));
+                
+                return data;
+                
+            } catch (error) {
+                updateStatus('❌ API Error: ' + error.message);
+                updateDetails(error.stack);
+                return null;
+            }
+        }
+        
+        async function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files[0]) {
+                updateStatus('⚠️ Please select a file first');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            updateStatus('📤 Starting upload process...');
+            updateDetails(`File: ${file.name} (${file.size} bytes, ${file.type})`);
+            
+            // Step 1: Get presigned URL
+            const apiData = await testAPI();
+            if (!apiData) return;
+            
+            // Step 2: Upload to S3
+            updateStatus('📤 Uploading to S3...');
+            
+            try {
+                const uploadResponse = await fetch(apiData.uploadURL, {
+                    method: 'PUT',
+                    body: file,
+                    headers: {
+                        'Content-Type': file.type
+                    }
+                });
+                
+                updateDetails(`Upload Response:
+Status: ${uploadResponse.status} ${uploadResponse.statusText}
+Headers: ${JSON.stringify([...uploadResponse.headers.entries()], null, 2)}
+URL: ${apiData.uploadURL}`);
+                
+                if (uploadResponse.ok) {
+                    updateStatus('✅ Upload to S3 successful!');
+                    
+                    // Step 3: Test CloudFront access
+                    updateStatus('🌐 Testing CloudFront access...');
+                    
+                    const cloudFrontURL = `https://d3ieyce90rkgk7.cloudfront.net/${apiData.key}`;
+                    
+                    setTimeout(async () => {
+                        try {
+                            const cfResponse = await fetch(cloudFrontURL, { method: 'HEAD' });
+                            updateDetails(`CloudFront Test:
+URL: ${cloudFrontURL}
+Status: ${cfResponse.status} ${cfResponse.statusText}
+Headers: ${JSON.stringify([...cfResponse.headers.entries()], null, 2)}`);
+                            
+                            if (cfResponse.ok) {
+                                updateStatus('🎉 SUCCESS! File accessible via CloudFront');
+                            } else {
+                                updateStatus(`❌ CloudFront Error: ${cfResponse.status} ${cfResponse.statusText}`);
+                            }
+                        } catch (error) {
+                            updateStatus('❌ CloudFront Test Error: ' + error.message);
+                        }
+                    }, 2000); // Wait 2 seconds for S3 consistency
+                    
+                } else {
+                    updateStatus(`❌ S3 Upload Failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+                }
+                
+            } catch (error) {
+                updateStatus('❌ Upload Error: ' + error.message);
+                updateDetails(error.stack);
+            }
+        }
+        
+        // Auto-test API on load
+        window.onload = () => {
+            updateStatus('🚀 Ready to test uploads');
+            testAPI();
+        };
+    </script>
+</body>
+</html>

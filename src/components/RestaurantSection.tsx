@@ -210,7 +210,7 @@ const RestaurantSection: React.FC = () => {
           {/* Image */}
           <div className="relative">
             <img
-              src={restaurantBackground?.imageUrl || "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp"}
+              src={restaurantBackground?.imageUrl || "https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp"}
               alt="Vintage Car Restaurant"
               className="w-full h-96 object-cover rounded-xl shadow-lg"
             />

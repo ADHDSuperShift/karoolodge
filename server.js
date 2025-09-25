@@ -58,7 +58,7 @@ app.post('/api/upload-url', (req, res) => {
   // For testing purposes, return mock URLs
   // In a real implementation, you would generate presigned S3 URLs
   const mockUploadUrl = `https://example-bucket.s3.amazonaws.com/${folder || 'uploads'}/${fileName}?mock=true`;
-  const mockPublicUrl = `https://d64gsuwffb70l.cloudfront.net/${folder || 'uploads'}/${fileName}`;
+  const mockPublicUrl = `https://d3ieyce90rkgk7.cloudfront.net/${folder || 'uploads'}/${fileName}`;
 
   res.json({
     uploadUrl: mockUploadUrl,

@@ -12,7 +12,7 @@ echo ""
 
 # Step 2: Get CloudFront distribution ID
 echo "=== STEP 2: CLOUDFRONT DISTRIBUTION ==="
-DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'd64gsuwffb70l.cloudfront.net')].Id" --output text 2>/dev/null)
+DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'd3ieyce90rkgk7.cloudfront.net')].Id" --output text 2>/dev/null)
 if [ -n "$DISTRIBUTION_ID" ]; then
     echo "Distribution ID found: $DISTRIBUTION_ID"
 else
@@ -38,7 +38,7 @@ echo ""
 # Step 5: Test CloudFront access
 echo "=== STEP 5: CLOUDFRONT ACCESS TEST ==="
 echo "Testing placeholder.svg access:"
-curl -I "https://d64gsuwffb70l.cloudfront.net/placeholder.svg" 2>/dev/null | head -3 || echo "CloudFront access test failed"
+curl -I "https://d3ieyce90rkgk7.cloudfront.net/placeholder.svg" 2>/dev/null | head -3 || echo "CloudFront access test failed"
 echo ""
 
 echo "=== DIAGNOSTIC COMPLETE ==="

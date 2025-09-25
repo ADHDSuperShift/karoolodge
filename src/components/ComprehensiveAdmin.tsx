@@ -918,8 +918,7 @@ const ComprehensiveAdmin: React.FC = () => {
 
         const { uploadURL: uploadUrl, fileUrl: publicUrl } = await response.json();
 
-        console.log('Upload API Response:', { uploadUrl, publicUrl });
-        console.log('File details:', { name: file.name, size: file.size, type: file.type });
+        console.log('📤 Uploading:', uniqueFilename, 'to folder:', folder);
 
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
@@ -929,38 +928,19 @@ const ComprehensiveAdmin: React.FC = () => {
           }
         });
 
-        console.log('S3 Upload Response:', {
-          status: uploadResponse.status,
-          statusText: uploadResponse.statusText,
-          ok: uploadResponse.ok
-        });
-
         if (!uploadResponse.ok) {
           const errorText = await uploadResponse.text();
-          console.error('S3 Upload Error Details:', errorText);
+          console.error('❌ S3 Upload Failed:', uploadResponse.status, uploadResponse.statusText, errorText);
           throw new Error(`Upload to S3 failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
         }
 
-        // CloudFront URL must match the actual S3 path (including folder)
-        const cloudFrontBase = 'https://d64gsuwffb70l.cloudfront.net';
-        const correctedUrl = `${cloudFrontBase}/${folder}/${uniqueFilename}`;
-        
-        console.log('Original API URL:', publicUrl);
-        console.log('Corrected CloudFront URL (with folder):', correctedUrl);
-        console.log('Upload completed successfully to:', uploadUrl);
+        console.log('✅ Upload successful!');
 
-        // Test if the file is immediately accessible (may fail due to propagation delay)
-        setTimeout(async () => {
-          try {
-            const testResponse = await fetch(correctedUrl, { method: 'HEAD' });
-            console.log(`File accessibility test for ${correctedUrl}:`, {
-              status: testResponse.status,
-              accessible: testResponse.ok
-            });
-          } catch (e) {
-            console.log('File accessibility test failed (this is normal immediately after upload):', e);
-          }
-        }, 1000);
+        // Use S3 direct URLs until CloudFront is set up
+        const s3Base = 'https://barrydale-media.s3.eu-west-1.amazonaws.com';
+        const correctedUrl = `${s3Base}/${folder}/${uniqueFilename}`;
+        
+        console.log('🌐 S3 Direct URL:', correctedUrl);
 
         return correctedUrl;
       } catch (error) {

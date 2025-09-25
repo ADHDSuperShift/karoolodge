@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Karoo Lodge Cache</title>
+</head>
+<body>
+    <h1>🧹 Clear All Cached Data</h1>
+    
+    <button onclick="clearAll()">CLEAR ALL CACHE</button>
+    <button onclick="showCache()">SHOW CURRENT CACHE</button>
+    
+    <div id="status"></div>
+    <pre id="output"></pre>
+    
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = `<p>${message}</p>`;
+        }
+        
+        function updateOutput(content) {
+            document.getElementById('output').textContent = content;
+        }
+        
+        function clearAll() {
+            const keys = [
+                'karoo-lodge-state',
+                'simple-admin-data', 
+                'test-admin-data',
+                'admin-images',
+                'admin-backgrounds',
+                'lodge-gallery',
+                'lodge-backgrounds',
+                'theme'
+            ];
+            
+            let cleared = 0;
+            keys.forEach(key => {
+                if (localStorage.getItem(key)) {
+                    localStorage.removeItem(key);
+                    cleared++;
+                }
+            });
+            
+            updateStatus(`✅ Cleared ${cleared} cached items`);
+            updateOutput('Cache cleared successfully!');
+            
+            // Also clear any other karoo-lodge related items
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('karoo') || key.includes('lodge') || key.includes('admin'))) {
+                    localStorage.removeItem(key);
+                }
+            }
+        }
+        
+        function showCache() {
+            const cache = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('karoo') || key.includes('lodge') || key.includes('admin'))) {
+                    const value = localStorage.getItem(key);
+                    cache[key] = value.substring(0, 200) + (value.length > 200 ? '...' : '');
+                }
+            }
+            
+            updateStatus(`Found ${Object.keys(cache).length} cached items`);
+            updateOutput(JSON.stringify(cache, null, 2));
+        }
+        
+        // Auto-show cache on load
+        showCache();
+    </script>
+</body>
+</html>

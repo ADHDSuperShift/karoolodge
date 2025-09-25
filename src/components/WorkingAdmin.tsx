@@ -14,10 +14,10 @@ const WorkingAdmin = () => {
   
   // Section backgrounds state
   const [backgrounds, setBackgrounds] = useState({
-    hero: 'https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp',
-    restaurant: 'https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp',
-    wine: 'https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp',
-    bar: 'https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp'
+  hero: 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp',
+  restaurant: 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp',
+  wine: 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp',
+  bar: 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp'
   });
 
   // Load data from localStorage

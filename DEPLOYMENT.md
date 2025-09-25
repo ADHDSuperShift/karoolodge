@@ -49,7 +49,7 @@
      VITE_COGNITO_CLIENT_ID=3d3cij4c87drjkuko3np8lmn1d
      VITE_AUTH_ENDPOINT=https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/get-api-key
      VITE_UPLOAD_ENDPOINT=https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/upload-url
-     VITE_CLOUDFRONT_URL=https://d64gsuwffb70l.cloudfront.net
+   VITE_CLOUDFRONT_URL=https://d3ieyce90rkgk7.cloudfront.net
      ```
 
 5. **Domain Setup** (Optional):

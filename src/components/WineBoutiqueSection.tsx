@@ -23,7 +23,7 @@ const WineBoutiqueSection: React.FC = () => {
           {/* Wine Shop Image */}
           <div className="relative">
             <img
-              src={wineBoutiqueBackground?.imageUrl || "https://d64gsuwffb70l.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp"}
+              src={wineBoutiqueBackground?.imageUrl || "https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp"}
               alt="Wine Boutique Interior"
               className="w-full h-96 object-cover rounded-xl shadow-lg"
             />

@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => ({
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
         "connect-src 'self' https://cognito-idp.us-east-1.amazonaws.com https://*.amazonaws.com https://www.google.com https://maps.googleapis.com https://maps.gstatic.com http://localhost:4000 http://localhost:4001 https: http:",
-        "img-src 'self' data: https://*.amazonaws.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https://d64gsuwffb70l.cloudfront.net https://*.cloudfront.net https: http:",
+  "img-src 'self' data: https://*.amazonaws.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https://d3ieyce90rkgk7.cloudfront.net https://*.cloudfront.net https: http:",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "frame-src 'self' https://www.google.com https://maps.google.com"
