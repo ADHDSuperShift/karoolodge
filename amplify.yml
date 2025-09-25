@@ -7,6 +7,11 @@ applications:
             - npm ci
         build:
           commands:
+            - echo "Setting environment variables..."
+            - export VITE_AUTH_ENDPOINT="https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev"
+            - export VITE_UPLOAD_ENDPOINT="https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api"
+            - export VITE_COGNITO_USER_POOL_ID="us-east-1_example"
+            - export VITE_COGNITO_CLIENT_ID="example123"
             - npm run build
             - cp public/_redirects dist/_redirects
             - echo "Redirects file copied to dist directory"
