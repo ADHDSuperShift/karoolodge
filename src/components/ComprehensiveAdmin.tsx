@@ -936,14 +936,26 @@ const ComprehensiveAdmin: React.FC = () => {
 
         console.log('✅ Upload successful!');
 
-        const s3Base = fileUrlFromApi?.replace(/^(https:\/\/[^/]+).*/, '$1') || 'https://barrydale-media.s3.eu-west-1.amazonaws.com';
-        const normalizedFolder = folder.replace(/^\/+|\/+$/g, '');
-        const s3Url = fileUrlFromApi ?? `${s3Base}/${normalizedFolder ? `${normalizedFolder}/` : ''}${uniqueFilename}`;
+        const s3Base = (fileUrlFromApi && typeof fileUrlFromApi === 'string' && fileUrlFromApi.length
+          ? fileUrlFromApi.replace(/^(https?:\/\/[^/]+).*/, '$1')
+          : uploadUrl.replace(/^(https?:\/\/[^/]+).*/, '$1')) || 'https://barrydale-media.s3.eu-west-1.amazonaws.com';
 
-        const cdnBase = import.meta.env.VITE_CLOUDFRONT_URL?.replace(/\/$/, '');
-        const finalUrl = cdnBase
-          ? s3Url.replace(/^https:\/\/[^/]+/, cdnBase)
-          : s3Url;
+        const normalizedFolder = (folder ?? '')
+          .split('/')
+          .map(segment => segment.trim())
+          .filter(Boolean)
+          .join('/');
+
+        const computedS3Url =
+          fileUrlFromApi && typeof fileUrlFromApi === 'string' && fileUrlFromApi.length
+            ? fileUrlFromApi
+            : `${s3Base}/${normalizedFolder ? `${normalizedFolder}/` : ''}${uniqueFilename}`;
+
+        const cdnBaseRaw = import.meta.env.VITE_CLOUDFRONT_URL;
+        const cdnBase = cdnBaseRaw && cdnBaseRaw.length ? cdnBaseRaw.replace(/\/$/, '') : '';
+
+        const finalUrl = (cdnBase ? computedS3Url.replace(/^https?:\/\/[^/]+/, cdnBase) : computedS3Url) ||
+          `${s3Base}/${normalizedFolder ? `${normalizedFolder}/` : ''}${uniqueFilename}`;
 
         console.log('🌐 Final media URL:', finalUrl);
 
