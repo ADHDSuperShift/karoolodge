@@ -51,13 +51,13 @@ const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID as string | undefin
 const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID as string | undefined;
 const authEndpoint = import.meta.env.VITE_AUTH_ENDPOINT || 'http://localhost:4001/api/get-api-key';
 
-// Debug logging
-console.log('Cognito Config:', { userPoolId, clientId, authEndpoint });
-console.log('Environment variables:', {
-  VITE_AUTH_ENDPOINT: import.meta.env.VITE_AUTH_ENDPOINT,
-  VITE_COGNITO_USER_POOL_ID: import.meta.env.VITE_COGNITO_USER_POOL_ID,
-  VITE_COGNITO_CLIENT_ID: import.meta.env.VITE_COGNITO_CLIENT_ID
-});
+// Debug logging (commented out for build compatibility)
+// console.log('Cognito Config:', { userPoolId, clientId, authEndpoint });
+// console.log('Environment variables:', {
+//   VITE_AUTH_ENDPOINT: import.meta.env.VITE_AUTH_ENDPOINT,
+//   VITE_COGNITO_USER_POOL_ID: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+//   VITE_COGNITO_CLIENT_ID: import.meta.env.VITE_COGNITO_CLIENT_ID
+// });
 
 // Validate configuration
 if (userPoolId && clientId) {
