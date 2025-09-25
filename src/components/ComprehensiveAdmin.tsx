@@ -1189,18 +1189,30 @@ const ComprehensiveAdmin: React.FC = () => {
           const publicUrl = await uploadFileToS3(file, 'gallery');
           const title = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim();
           const image = {
-            id: Date.now() + Math.random(),
             src: publicUrl,
-            category: 'scenery' as const,
+            category: 'scenery',
             title: title || 'New Image',
             description: ''
           };
-          addGalleryImage(image);
+          // Persist to backend
+          await fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/gallery', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
+            },
+            body: JSON.stringify(image)
+          });
           newItems.push(image);
         }
-
-        setLocalGallery((prev) => [...prev, ...newItems]);
-
+        // Re-fetch gallery from backend
+        const res = await fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/gallery', {
+          headers: {
+            'x-api-key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
+          }
+        });
+        const gallery = await res.json();
+        setLocalGallery(gallery);
         toast({
           title: 'Gallery updated',
           description: `${newItems.length} image${newItems.length > 1 ? 's' : ''} added to the gallery.`
