@@ -1,4 +1,8 @@
-const baseHeaders = require('./baseHeaders');
+const baseHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-API-Key"
+};
 
 exports.getApiKey = async (event) => {
   if (event.httpMethod === 'OPTIONS') {

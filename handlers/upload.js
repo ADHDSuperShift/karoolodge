@@ -1,6 +1,10 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const baseHeaders = require('./baseHeaders');
+const baseHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-API-Key"
+};
 
 const s3Client = new S3Client({ region: process.env.S3_REGION || 'eu-west-1' });
 

@@ -7,7 +7,7 @@ exports.saveImage = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: require('./baseHeaders'),
+        headers: baseHeaders,
       body: '',
     };
   }
@@ -18,7 +18,7 @@ exports.saveImage = async (event) => {
     if (!fileUrl) {
       return {
         statusCode: 400,
-  headers: { ...require('./baseHeaders'), 'Content-Type': 'application/json' },
+          headers: { ...baseHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: 'fileUrl is required' }),
       };
     }
@@ -36,7 +36,7 @@ exports.saveImage = async (event) => {
 
     return {
       statusCode: 200,
-  headers: { ...require('./baseHeaders'), 'Content-Type': 'application/json' },
+        headers: { ...baseHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ success: true }),
     };
   } catch (err) {
@@ -47,4 +47,9 @@ exports.saveImage = async (event) => {
       body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
+  const baseHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-API-Key"
+  };
 };

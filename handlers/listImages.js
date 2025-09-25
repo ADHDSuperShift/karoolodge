@@ -1,5 +1,9 @@
 const { DynamoDBClient, ScanCommand } = require('@aws-sdk/client-dynamodb');
-const baseHeaders = require('./baseHeaders');
+const baseHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-API-Key"
+};
 
 const dynamoClient = new DynamoDBClient({ region: process.env.S3_REGION || 'eu-west-1' });
 
