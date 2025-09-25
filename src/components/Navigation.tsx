@@ -58,18 +58,13 @@ const Navigation: React.FC = () => {
                 {item.name}
               </a>
             ))}
-            <Link 
-              to="/admin"
-              className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium text-sm transition-colors duration-200"
-            >
-              Admin
-            </Link>
+            {/* Admin button removed from header */}
             <ThemeToggle />
             <a 
               href="https://nightsbridge.com/karoo-lodge" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200 inline-block"
+              className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white px-3 py-1.5 rounded-md font-medium text-sm transition-colors duration-200 inline-block whitespace-nowrap ml-40"
             >
               Book Now
             </a>
@@ -101,13 +96,7 @@ const Navigation: React.FC = () => {
                   {item.name}
                 </a>
               ))}
-              <Link
-                to="/admin"
-                className="block px-3 py-2 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium text-sm"
-                onClick={() => setIsOpen(false)}
-              >
-                Admin
-              </Link>
+              {/* Admin button removed from mobile navigation */}
               <div className="px-3 py-2 border-t dark:border-gray-700 mt-2">
                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
                   <Phone className="w-4 h-4" />
