@@ -5,13 +5,15 @@ applications:
         preBuild:
           commands:
             - npm ci
+            - echo "Creating .env file with build variables..."
+            - echo "VITE_AUTH_ENDPOINT=https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev" > .env
+            - echo "VITE_UPLOAD_ENDPOINT=https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api" >> .env
+            - echo "VITE_COGNITO_USER_POOL_ID=us-east-1_fzogF46tc" >> .env
+            - echo "VITE_COGNITO_CLIENT_ID=3d3cij4c87drjkuko3np8lmn1d" >> .env
+            - echo "Environment file created:"
+            - cat .env
         build:
           commands:
-            - echo "Setting environment variables..."
-            - export VITE_AUTH_ENDPOINT="https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev"
-            - export VITE_UPLOAD_ENDPOINT="https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api"
-            - export VITE_COGNITO_USER_POOL_ID="us-east-1_example"
-            - export VITE_COGNITO_CLIENT_ID="example123"
             - npm run build
             - cp public/_redirects dist/_redirects
             - echo "Redirects file copied to dist directory"

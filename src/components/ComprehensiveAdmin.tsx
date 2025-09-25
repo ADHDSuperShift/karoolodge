@@ -879,7 +879,7 @@ const ComprehensiveAdmin: React.FC = () => {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const uploadEndpoint = import.meta.env.VITE_UPLOAD_ENDPOINT ?? 'http://localhost:4000/api/upload-url';
+  const uploadEndpoint = import.meta.env.VITE_UPLOAD_ENDPOINT || 'http://localhost:4000/api/upload-url';
 
   const uploadFileToS3 = useCallback(
     async (file: File, folder: string) => {
@@ -1730,7 +1730,7 @@ const ComprehensiveAdmin: React.FC = () => {
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.35em] text-amber-600">Barrydale Karoo Lodge</p>
             <h1 className="text-2xl font-semibold text-slate-900">Content & Media Console</h1>
-            <p className="text-xs text-slate-500">v2.0.0 - Full Admin System</p>
+            <p className="text-xs text-slate-500">v2.1.0 - Build {new Date().toISOString().slice(0,16).replace('T',' ')}</p>
           </div>
           <Button variant="outline" className="gap-2" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" /> Sign out
