@@ -345,8 +345,8 @@ const SortableRoomCard: React.FC<SortableRoomCardProps> = ({ room, onUpdate, onD
   const handleImageUpload = async (index: number, files: FileList | null) => {
     if (!files || !files.length) return;
     try {
-      const slug = toSlug(room.name, `room-${room.id}`);
-      const publicUrl = await onUpload(files[0], `rooms/${slug}`);
+      // Use simpler folder structure: just 'rooms' instead of 'rooms/slug'
+      const publicUrl = await onUpload(files[0], 'rooms');
       handleImageChange(index, publicUrl);
     } catch (error) {
       // Toast already handled upstream
@@ -602,8 +602,8 @@ const SortableWineCard: React.FC<SortableWineCardProps> = ({ wine, onUpdate, onD
   const handleImageUpload = async (files: FileList | null) => {
     if (!files || !files.length) return;
     try {
-      const slug = toSlug(wine.name, `wine-${wine.id}`);
-      const publicUrl = await onUpload(files[0], `wine/${slug}`);
+      // Use simpler folder structure: just 'wine' instead of 'wine/slug'
+      const publicUrl = await onUpload(files[0], 'wine');
       onUpdate(wine.id, { image: publicUrl });
     } catch (error) {
       // toast handled upstream
@@ -890,8 +890,14 @@ const ComprehensiveAdmin: React.FC = () => {
 
         // Generate unique filename BEFORE making API request
         const timestamp = Date.now();
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const uniqueFilename = `${timestamp}_${sanitizedName}`;
+        // Better filename sanitization that preserves file extensions
+        const nameParts = file.name.split('.');
+        const extension = nameParts.pop() || '';
+        const baseName = nameParts.join('.').replace(/[^a-zA-Z0-9._-]/g, '_');
+        const uniqueFilename = `${timestamp}_${baseName}.${extension}`;
+
+        console.log('Original filename:', file.name);
+        console.log('Generated unique filename:', uniqueFilename);
 
         const response = await fetch(uploadEndpoint, {
           method: 'POST',
