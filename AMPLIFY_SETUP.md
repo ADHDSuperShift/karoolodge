@@ -21,10 +21,29 @@ Go to **App settings** → **Environment variables** in your Amplify app and add
 
 ## SPA Routing Fix
 
-The latest deployment includes:
-- ✅ `_redirects` file for proper client-side routing
+If you're still getting 404 errors on `/admin`, you need to configure redirects manually in the Amplify Console:
+
+### Option 1: Automatic (should work with latest deployment)
+- ✅ `_redirects` file included in build
 - ✅ Updated `amplify.yml` with SPA configuration
-- ✅ Fixed 404 errors when accessing `/admin` directly
+
+### Option 2: Manual Console Configuration (if automatic doesn't work)
+1. Go to your Amplify app in the AWS Console
+2. Click on **App Settings** → **Rewrites and redirects**
+3. Click **Add rule** and configure:
+
+| Source Address | Target Address | Type | Country Code |
+|----------------|----------------|------|--------------|
+| `</admin>` | `/index.html` | `200 (Rewrite)` | - |
+| `</admin/*>` | `/index.html` | `200 (Rewrite)` | - |
+| `</*>` | `/index.html` | `404 (Rewrite)` | - |
+
+4. Click **Save**
+5. **Redeploy** your app
+
+### Option 3: Test with Hash Routing (temporary workaround)
+If redirects still don't work, the admin can be accessed at:
+- `https://your-app-url.amplifyapp.com/#/admin`
 
 ## Admin Access
 

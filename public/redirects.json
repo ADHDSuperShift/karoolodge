@@ -1,0 +1,20 @@
+[
+  {
+    "source": "/admin",
+    "target": "/index.html",
+    "status": "200",
+    "condition": null
+  },
+  {
+    "source": "/admin/*",
+    "target": "/index.html", 
+    "status": "200",
+    "condition": null
+  },
+  {
+    "source": "/<*>",
+    "target": "/index.html",
+    "status": "404-200",
+    "condition": null
+  }
+]

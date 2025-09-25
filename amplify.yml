@@ -8,6 +8,7 @@ applications:
         build:
           commands:
             - npm run build
+            - cp public/_redirects dist/_redirects
       artifacts:
         baseDirectory: dist
         files:
