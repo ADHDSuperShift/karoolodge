@@ -4,13 +4,9 @@ import React, { useState } from 'react';
 const CognitoTest: React.FC = () => {
   const [testResult, setTestResult] = useState<string>('');
 
-  const testCognitoConfig = () => {
-    const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID;
-    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-    
-    console.log('Testing Cognito configuration...');
-    console.log('User Pool ID:', userPoolId);
-    console.log('Client ID:', clientId);
+  const testCognitoConfig = async () => {
+    const userPoolId = process.env.REACT_APP_COGNITO_USER_POOL_ID;
+    const clientId = process.env.REACT_APP_COGNITO_CLIENT_ID;
     
     if (!userPoolId || !clientId) {
       setTestResult('❌ Environment variables not set properly');
@@ -19,7 +15,7 @@ const CognitoTest: React.FC = () => {
     
     try {
       // Just test if we can create the user pool object
-      const { CognitoUserPool } = require('amazon-cognito-identity-js');
+      const { CognitoUserPool } = await import('amazon-cognito-identity-js');
       const userPool = new CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId });
       
       if (userPool) {
@@ -28,7 +24,7 @@ const CognitoTest: React.FC = () => {
         setTestResult('❌ Failed to create User Pool object');
       }
     } catch (error) {
-      setTestResult(`❌ Error creating User Pool: ${error.message}`);
+      setTestResult(`❌ Error creating User Pool: ${(error as Error).message}`);
     }
   };
 

@@ -2,19 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Trash2, Upload, Save, Eye } from 'lucide-react';
 import PhotoManager from './PhotoManager';
 
-interface Room {
-  id: number;
-  name: string;
-  category: string;
-  images: string[];
-  price: string;
-  description: string;
-  detailedDescription: string;
-  amenities: string[];
-  maxGuests: number;
-  bedConfiguration: string;
-  size: string;
-}
+import { Room } from '../contexts/GlobalStateContext';
 
 interface RoomEditorProps {
   room?: Room;

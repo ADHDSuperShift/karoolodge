@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, Calendar, FileText, Users, Settings, LogOut, Eye, Edit3, Save, X, Plus, Trash2, Image as ImageIcon, Wine } from 'lucide-react';
 import { useGlobalState } from '../contexts/GlobalStateContext';
+import type { Room, Event, GalleryImage, SectionBackground, WineItem } from '../contexts/GlobalStateContext';
 import RoomEditor from './RoomEditor';
 import EventEditor from './EventEditor';
 import ContentEditor from './ContentEditor';
@@ -9,24 +10,17 @@ import GalleryManager from './GalleryManager';
 import SectionBackgroundManager from './SectionBackgroundManager';
 import WineCollectionManager from './WineCollectionManager';
 
+interface ContentSection {
+  id: string;
+  title: string;
+  content: string;
+  type: 'text' | 'html' | 'image';
+  category: string;
+}
+
 interface AdminData {
-  rooms: Array<{
-    id: number;
-    name: string;
-    category: string;
-    images: string[];
-    price: string;
-    description: string;
-    detailedDescription: string;
-  }>;
-  events: Array<{
-    id: number;
-    title: string;
-    date: string;
-    time: string;
-    description: string;
-    type: string;
-  }>;
+  rooms: Room[];
+  events: Event[];
   siteContent: {
     heroTitle: string;
     heroSubtitle: string;
@@ -96,9 +90,9 @@ const AdminDashboard: React.FC = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [showRoomEditor, setShowRoomEditor] = useState(false);
   const [showEventEditor, setShowEventEditor] = useState(false);
-  const [editingRoom, setEditingRoom] = useState<any>(null);
-  const [editingEvent, setEditingEvent] = useState<any>(null);
-  const [contentSections, setContentSections] = useState<any[]>([]);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [contentSections, setContentSections] = useState<ContentSection[]>([]);
 
 
 
@@ -122,7 +116,7 @@ const AdminDashboard: React.FC = () => {
     console.log('Test button clicked - buttons are working!');
   };
 
-  const handleSaveRoom = (room: any) => {
+  const handleSaveRoom = (room: Room) => {
     if (editingRoom) {
       updateRoom(room);
     } else {
@@ -131,7 +125,7 @@ const AdminDashboard: React.FC = () => {
     setEditingRoom(null);
   };
 
-  const handleSaveEvent = (event: any) => {
+  const handleSaveEvent = (event: Event) => {
     if (editingEvent) {
       updateEvent(event);
     } else {
@@ -152,12 +146,12 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const openRoomEditor = (room?: any) => {
+  const openRoomEditor = (room?: Room) => {
     setEditingRoom(room || null);
     setShowRoomEditor(true);
   };
 
-  const openEventEditor = (event?: any) => {
+  const openEventEditor = (event?: Event) => {
     setEditingEvent(event || null);
     setShowEventEditor(true);
   };
@@ -168,7 +162,13 @@ const AdminDashboard: React.FC = () => {
       if (existing) {
         return prev.map(s => s.id === sectionId ? { ...s, content } : s);
       } else {
-        return [...prev, { id: sectionId, content }];
+        return [...prev, { 
+          id: sectionId, 
+          content, 
+          title: sectionId, 
+          type: 'text' as const, 
+          category: 'general' 
+        }];
       }
     });
   };
@@ -177,17 +177,17 @@ const AdminDashboard: React.FC = () => {
     updateSiteContent({ logoUrl });
   };
 
-  const handleGalleryImagesUpdate = (images: any[]) => {
+  const handleGalleryImagesUpdate = (images: GalleryImage[]) => {
     console.log('handleGalleryImagesUpdate called with:', images.length, 'images');
     updateGalleryImages(images);
   };
 
-  const handleSectionBackgroundsUpdate = (backgrounds: any[]) => {
+  const handleSectionBackgroundsUpdate = (backgrounds: SectionBackground[]) => {
     console.log('handleSectionBackgroundsUpdate called with:', backgrounds.length, 'backgrounds');
     updateSectionBackgrounds(backgrounds);
   };
 
-  const handleWineCollectionUpdate = (wines: any[]) => {
+  const handleWineCollectionUpdate = (wines: WineItem[]) => {
     console.log('handleWineCollectionUpdate called with:', wines.length, 'wines');
     updateWineCollection(wines);
   };

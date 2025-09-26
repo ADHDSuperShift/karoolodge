@@ -855,5 +855,8 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
   );
 };
 
+// Export types for use in other components
+export type { Room, Event, WineItem, GalleryImage, SectionBackground };
+
 // Export the provider as default for better Fast Refresh compatibility
 export default GlobalStateProvider;
