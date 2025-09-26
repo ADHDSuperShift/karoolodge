@@ -29,19 +29,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const checkAuthState = async () => {
       try {
-        // Check for temporary auth first
+        // Check Amplify/Cognito auth first
+        await getCurrentUser();
+        setIsAuthenticated(true);
+        return;
+      } catch (error) {
+        // Fall back to checking temporary auth
         const savedAuth = localStorage.getItem('temp-auth');
         if (savedAuth === 'authenticated') {
           setIsAuthenticated(true);
-          return;
+        } else {
+          setIsAuthenticated(false);
         }
-        
-        // Check Amplify auth
-        await getCurrentUser();
-        setIsAuthenticated(true);
-      } catch (error) {
-        // User is not authenticated
-        setIsAuthenticated(false);
       }
     };
     checkAuthState();
@@ -52,21 +51,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     
     try {
-      // Fallback to simple auth if Amplify fails
+      // Try Amplify/Cognito auth first
+      const { isSignedIn } = await amplifySignIn({ username, password });
+      if (isSignedIn) {
+        setIsAuthenticated(true);
+        return;
+      }
+    } catch (cognitoError) {
+      console.warn('Cognito auth failed, trying fallback:', cognitoError);
+      
+      // Fallback to simple auth for development
       if (username === 'admin@example.com' && password === 'temporary123') {
         setIsAuthenticated(true);
         localStorage.setItem('temp-auth', 'authenticated');
         return;
       }
-
-      // Try Amplify auth
-      const { isSignedIn } = await amplifySignIn({ username, password });
-      if (isSignedIn) {
-        setIsAuthenticated(true);
-      }
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'Authentication failed');
-      throw error;
+      
+      // If both fail, throw the original error
+      setAuthError(cognitoError instanceof Error ? cognitoError.message : 'Authentication failed');
+      throw cognitoError;
     } finally {
       setIsLoading(false);
     }
