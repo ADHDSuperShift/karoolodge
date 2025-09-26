@@ -1,15 +1,13 @@
+# Amplify Build Configuration
+# Backend is pre-deployed, focusing on frontend-only deployment
+
 version: 1
-backend:
-  phases:
-    build:
-      commands:
-        - '# Execute Amplify CLI with the helper script'
-        - amplifyPush --simple
 frontend:
   phases:
     preBuild:
       commands:
         - npm ci
+        - echo "Backend resources already exist, skipping amplifyPush"
     build:
       commands:
         - npm run build
@@ -20,3 +18,7 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+      
+# Note: Backend deployment disabled due to S3 permissions issue
+# Backend resources (Cognito, S3) are already deployed and working
+# This configuration focuses on frontend deployment only
