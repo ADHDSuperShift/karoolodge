@@ -51,6 +51,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { uploadData, getUrl } from 'aws-amplify/storage';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalState } from '@/contexts/GlobalStateContext';
 import { cn } from '@/lib/utils';
@@ -957,10 +958,16 @@ const ComprehensiveAdmin: React.FC = () => {
   const uploadFileToS3 = useCallback(
     async (file: File, folder: string): Promise<string> => {
       try {
+        // Ensure authenticated identity is used for Storage writes
+        if (!isAuthenticated) {
+          throw new Error('Please sign in before uploading files.');
+        }
+        await fetchAuthSession();
         // Create a unique filename
         const timestamp = Date.now();
         const fileExtension = file.name.split('.').pop();
-        const fileName = `${folder}/${timestamp}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+        const keyPrefix = folder.startsWith('media/') ? folder : `media/${folder}`;
+        const fileName = `${keyPrefix}/${timestamp}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
         
         console.log('Uploading to S3:', fileName);
         
@@ -982,9 +989,7 @@ const ComprehensiveAdmin: React.FC = () => {
         console.log('Upload successful:', result);
         
         // Get the public URL for the uploaded file
-        const urlResult = await getUrl({
-          key: fileName,
-        });
+  const urlResult = await getUrl({ key: fileName });
 
         const publicUrl = urlResult.url.toString();
         console.log('Public URL:', publicUrl);
@@ -1007,7 +1012,7 @@ const ComprehensiveAdmin: React.FC = () => {
         return '/placeholder.svg';
       }
     },
-    [toast]
+  [toast, isAuthenticated]
   );
 
   const handleRoomsDragEnd = (event: DragEndEvent) => {

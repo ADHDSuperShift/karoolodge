@@ -3,18 +3,18 @@ frontend:
   phases:
     preBuild:
       commands:
-  - echo "Cleaning up to fix Rollup native dependencies issue"
-  - echo "Switching to Node 20 LTS to avoid npm optional deps bug"
-  - nvm install 20 || true
-  - nvm use 20 || true
-  - node -v && npm -v
-  - npm config set optional true
-  - npm config set prefer-offline false
-  - npm cache clean --force || true
-  - rm -rf ~/.npm || true
-  - rm -rf node_modules package-lock.json
-  - export NPM_CONFIG_OPTIONAL=true
-  - npm install
+        - echo "Cleaning up to fix Rollup native dependencies issue"
+        - echo "Switching to Node 20 LTS to avoid npm optional deps bug"
+        - nvm install 20 || true
+        - nvm use 20 || true
+        - node -v && npm -v
+        - npm config set optional true
+        - npm config set prefer-offline false
+        - npm cache clean --force || true
+        - rm -rf ~/.npm || true
+        - rm -rf node_modules package-lock.json
+        - export NPM_CONFIG_OPTIONAL=true
+        - npm install
     build:
       commands:
         - npm run build
@@ -23,7 +23,7 @@ frontend:
     files:
       - '**/*'
   cache:
-  paths: []
+    paths: []
 customHeaders:
   - pattern: '**'
     headers:

@@ -11,6 +11,16 @@ export const storage = defineStorage({
       allow.guest.to(['read']),
       allow.authenticated.to(['read', 'write', 'delete']),
     ],
+    // Background images for sections
+    'media/backgrounds/*': [
+      allow.guest.to(['read']),
+      allow.authenticated.to(['read', 'write', 'delete']),
+    ],
+    // Branding assets like logo, etc.
+    'media/branding/*': [
+      allow.guest.to(['read']),
+      allow.authenticated.to(['read', 'write', 'delete']),
+    ],
     'media/uploads/*': [
       allow.authenticated.to(['read', 'write', 'delete']),
     ],
