@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { uploadData } from 'aws-amplify/storage';
-import amplifyConfig from '../amplifyconfiguration';
+import amplifyConfig from '../amplifyconfiguration.ts';
 import {
   DndContext,
   DragEndEvent,
@@ -983,6 +983,9 @@ const ComprehensiveAdmin: React.FC = () => {
           data: file,
           options: { contentType: file.type }
         }).result;
+
+        // Wait a moment for the upload to fully complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         console.log('Upload result:', uploadOutput);
         console.log('Upload result path:', (uploadOutput as any)?.path);
