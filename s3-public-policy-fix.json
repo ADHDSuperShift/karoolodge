@@ -6,7 +6,7 @@
                 "s3:PutObject"
             ],
             "Resource": [
-                "arn:aws:s3:::barrydalekaroo185607-dev/public/*"
+                "arn:aws:s3:::karoolodge3ad9e6f1467e4bda8acaa46cbb246f78b557e-dev/public/*"
             ],
             "Effect": "Allow"
         }

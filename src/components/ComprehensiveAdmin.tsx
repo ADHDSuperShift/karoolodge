@@ -973,9 +973,18 @@ const ComprehensiveAdmin: React.FC = () => {
         if (!file.type.startsWith('image/')) throw new Error('Please select an image file');
         if (file.size > 5 * 1024 * 1024) throw new Error('Image must be smaller than 5MB');
 
-        // Provide a relative key; Amplify will prefix based on access level (e.g., 'public/')
-        const key = `${folder}/${Date.now()}-${file.name}`;
-        console.log('Uploading to S3 with key:', key);
+        // Map folder names to Amplify storage paths
+        const folderMapping: Record<string, string> = {
+          'rooms': 'media/rooms',
+          'backgrounds': 'media/backgrounds', 
+          'gallery': 'media/gallery',
+          'wine': 'media/gallery', // wine images go to gallery
+          'events': 'media/gallery' // event images go to gallery
+        };
+        
+        const amplifyPath = folderMapping[folder] || `media/${folder}`;
+        const key = `${amplifyPath}/${Date.now()}-${file.name}`;
+        console.log('Uploading to S3 with Amplify path:', key);
 
         const uploadOutput = await uploadData({
           key,
@@ -996,10 +1005,10 @@ const ComprehensiveAdmin: React.FC = () => {
         }
 
         // Build a stable, publicly addressable URL (requires bucket policy allowing public read)
-        // Use hardcoded values since config import is unreliable on Amplify
-        const bucket = 'barrydalekaroo185607-dev';
+        // Use the Amplify-generated bucket name that matches aws-exports.js
+        const bucket = 'karoolodge3ad9e6f1467e4bda8acaa46cbb246f78b557e-dev';
         const region = 'us-east-1';
-        console.log('Debug - Using hardcoded values - bucket:', bucket, 'region:', region);
+        console.log('Debug - Using Amplify bucket - bucket:', bucket, 'region:', region);
         
         const resolvedKey = (uploadOutput as any)?.path || `public/${key}`; // Ensure public/ prefix
         console.log('Debug - resolvedKey:', resolvedKey);
