@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { uploadData } from 'aws-amplify/storage';
-import amplifyconfig from '../amplifyconfiguration';
 import {
   DndContext,
   DragEndEvent,
@@ -991,12 +990,16 @@ const ComprehensiveAdmin: React.FC = () => {
         console.log('Upload result path:', (uploadOutput as any)?.path);
         console.log('Upload result key:', (uploadOutput as any)?.key);
 
+        // Validate that the upload actually succeeded
+        if (!(uploadOutput as any)?.key) {
+          throw new Error('Upload failed - no key returned from S3');
+        }
+
         // Build a stable, publicly addressable URL (requires bucket policy allowing public read)
-        // Fallback values in case amplifyConfig doesn't load properly
-        const bucket = amplifyconfig?.Storage?.S3?.bucket || 'barrydalekaroo185607-dev';
-        const region = amplifyconfig?.Storage?.S3?.region || 'us-east-1';
-        console.log('Debug - amplifyconfig.Storage:', amplifyconfig?.Storage);
-        console.log('Debug - bucket:', bucket, 'region:', region);
+        // Use hardcoded values since config import is unreliable on Amplify
+        const bucket = 'barrydalekaroo185607-dev';
+        const region = 'us-east-1';
+        console.log('Debug - Using hardcoded values - bucket:', bucket, 'region:', region);
         
         const resolvedKey = (uploadOutput as any)?.path || `public/${key}`; // Ensure public/ prefix
         console.log('Debug - resolvedKey:', resolvedKey);
