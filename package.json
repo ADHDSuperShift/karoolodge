@@ -2,6 +2,7 @@
   "name": "karoo_lodge_admin_system",
   "private": true,
   "version": "2.1.1",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,8 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.896.0",
-    "@aws-sdk/s3-request-presigner": "^3.896.0",
+    "@aws-amplify/ui-react": "^6.13.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -46,8 +46,7 @@
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.56.2",
     "@types/uuid": "^10.0.0",
-    "amazon-cognito-identity-js": "^6.3.15",
-    "aws-sdk": "^2.1692.0",
+    "aws-amplify": "^6.15.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -73,6 +72,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@aws-amplify/backend": "^1.16.1",
+    "@aws-amplify/backend-cli": "^1.8.0",
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.5.5",
@@ -80,13 +81,17 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.20",
+    "aws-cdk-lib": "^2.204.0",
+    "constructs": "^10.4.2",
+    "esbuild": "^0.25.10",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
-    "typescript": "^5.5.3",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
   }
