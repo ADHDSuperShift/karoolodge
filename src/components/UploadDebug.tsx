@@ -5,18 +5,7 @@ const UploadDebug: React.FC = () => {
     try {
       const galleryJson = localStorage.getItem('karoo-gallery-state');
       const galleryData = galleryJson ? JSON.parse(galleryJson) : [];
-      const uploadedImages = galleryData.filter((img: any) => img.src.startsWith('data:'));
-      
-      console.log('Gallery Stats:', {
-        totalGallery: galleryData.length,
-        uploadedImages: uploadedImages.length,
-        defaultImages: galleryData.length - uploadedImages.length
-      });
-      
-      alert(`Gallery Stats:
-Total Images: ${galleryData.length}
-Uploaded Images: ${uploadedImages.length}
-Default Images: ${galleryData.length - uploadedImages.length}`);
+      alert(`Gallery Stats:\nTotal Images: ${galleryData.length}`);
     } catch (error) {
       alert('Error reading gallery stats');
     }
@@ -30,17 +19,7 @@ Default Images: ${galleryData.length - uploadedImages.length}`);
   };
 
   const handleClearUploaded = () => {
-    if (confirm('Are you sure you want to clear only uploaded images?')) {
-      try {
-        const galleryJson = localStorage.getItem('karoo-gallery-state');
-        const galleryData = galleryJson ? JSON.parse(galleryJson) : [];
-        const defaultImages = galleryData.filter((img: any) => !img.src.startsWith('data:'));
-        localStorage.setItem('karoo-gallery-state', JSON.stringify(defaultImages));
-        alert('Uploaded images cleared. Refresh the page to see changes.');
-      } catch (error) {
-        alert('Error clearing uploaded images');
-      }
-    }
+    alert('No base64 uploads to clear. Use Clear All to reset gallery cache.');
   };
 
   return (

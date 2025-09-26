@@ -55,20 +55,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { isSignedIn } = await amplifySignIn({ username, password });
       if (isSignedIn) {
         setIsAuthenticated(true);
+        console.log('✅ Successfully authenticated with Cognito');
         return;
       }
     } catch (cognitoError) {
-      console.warn('Cognito auth failed, trying fallback:', cognitoError);
+      console.error('❌ Cognito auth failed:', cognitoError);
       
-      // Fallback to simple auth for development
-      if (username === 'admin@example.com' && password === 'temporary123') {
-        setIsAuthenticated(true);
-        localStorage.setItem('temp-auth', 'authenticated');
-        return;
-      }
-      
-      // If both fail, throw the original error
-      setAuthError(cognitoError instanceof Error ? cognitoError.message : 'Authentication failed');
+      // For S3 uploads to work, we NEED Cognito auth - no fallback
+      setAuthError('Authentication failed - S3 uploads require Cognito login');
       throw cognitoError;
     } finally {
       setIsLoading(false);

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { uploadData, getUrl } from 'aws-amplify/storage';
+import { uploadData } from 'aws-amplify/storage';
+import amplifyConfig from '@/amplifyconfiguration';
 import {
   DndContext,
   DragEndEvent,
@@ -342,16 +343,11 @@ const SortableRoomCard: React.FC<SortableRoomCardProps> = ({ room, onUpdate, onD
     transition
   };
 
-  const imagePreview = room.images?.[0] ?? '/placeholder.svg';
-  const multiLine = (value: string) =>
-    value
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean);
-
+  const imagePreview = (room.images ?? []).find(Boolean) || '/placeholder.svg';
   const images = room.images ?? [];
 
   const handleImageChange = (index: number, value: string) => {
+    console.log('Room image change:', { roomId: room.id, index, value });
     const next = [...images];
     next[index] = value;
     onUpdate(room.id, { images: next });
@@ -850,7 +846,21 @@ const SortableEventCard: React.FC<SortableEventCardProps> = ({ eventItem, onUpda
   );
 };
 
+const multiLine = (value: string): string[] => value
+  .split('\n')
+  .map(s => s.trim())
+  .filter(Boolean);
+
 const ComprehensiveAdmin: React.FC = () => {
+  // Utility to clear localStorage if images aren't loading
+  const clearStorageAndRefresh = useCallback(() => {
+    if (confirm('This will clear all cached data and refresh the page. Are you sure?')) {
+      localStorage.removeItem('karoo-gallery-state');
+      localStorage.removeItem('karoo-global-state');
+      window.location.reload();
+    }
+  }, []);
+
   const {
     rooms,
     updateRooms,
@@ -955,90 +965,55 @@ const ComprehensiveAdmin: React.FC = () => {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // Convert file to base64 and add directly to global state
+  // Upload to S3 and return a public URL (no base64 fallback)
   const uploadFileToS3 = useCallback(
     async (file: File, folder: string): Promise<string> => {
       try {
         console.log('Processing file upload:', file.name, 'to', folder);
-        
-        // Validate file is an image
-        if (!file.type.startsWith('image/')) {
-          throw new Error('Please select an image file');
-        }
-        
-        // Check file size (limit to 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          throw new Error('Image must be smaller than 5MB');
-        }
-        
-        // Upload to S3 with fallback to base64
-        const uploadFileToS3 = async (file: File, folder: string) => {
-          try {
-            const key = `${folder}/${Date.now()}-${file.name}`;
-            
-            // Try S3 upload first
-            await uploadData({
-              key: key,
-              data: file,
-              options: {
-                contentType: file.type
-              }
-            }).result;
-            
-            // Get the URL
-            const url = await getUrl({
-              key: key
-            });
-            
-            return url.url.toString();
-          } catch (error) {
-            console.warn('S3 upload failed, falling back to base64:', error);
-            
-            // Fallback to base64 conversion
-            return new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = () => reject(new Error('Failed to read file'));
-              reader.readAsDataURL(file);
-            });
-          }
-        };
-        
-        const uploadedUrl = await uploadFileToS3(file, folder);
-        
-        // If it's a gallery image, add it to the gallery
+
+        if (!file.type.startsWith('image/')) throw new Error('Please select an image file');
+        if (file.size > 5 * 1024 * 1024) throw new Error('Image must be smaller than 5MB');
+
+        // Provide a relative key; Amplify will prefix based on access level (e.g., 'public/')
+        const key = `${folder}/${Date.now()}-${file.name}`;
+        console.log('Uploading to S3 with key:', key);
+
+        const uploadOutput = await uploadData({
+          key,
+          data: file,
+          options: { contentType: file.type }
+        }).result;
+
+        // Build a stable, publicly addressable URL (requires bucket policy allowing public read)
+        const bucket = amplifyConfig.Storage?.S3?.bucket as string;
+        const region = amplifyConfig.Storage?.S3?.region as string;
+        const resolvedKey = (uploadOutput as any)?.path || `public/${key}`; // Ensure public/ prefix
+        const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/${resolvedKey}`;
+        console.log('S3 object public URL:', publicUrl);
+
+        // Gallery convenience: push into state immediately
         if (folder === 'gallery') {
-          const newGalleryImage = {
+          addGalleryImage({
             id: Date.now() + Math.floor(Math.random() * 1000),
-            src: uploadedUrl,
-            category: 'scenery' as const,
+            src: publicUrl,
+            category: 'scenery',
             title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim(),
             description: `Uploaded ${new Date().toLocaleDateString()}`
-          };
-          
-          // Add to global state
-          addGalleryImage(newGalleryImage);
+          });
         }
-        
-        // Simulate upload delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const isBase64 = uploadedUrl.startsWith('data:');
-        
-        toast({
-          title: 'Upload successful',
-          description: `${file.name} has been uploaded ${isBase64 ? 'locally (base64)' : 'to cloud storage'}`,
-        });
 
-        return uploadedUrl; // Return the URL for immediate use
+        // small UX delay
+        await new Promise((r) => setTimeout(r, 300));
+
+        toast({ title: 'Upload successful', description: `${file.name} uploaded to cloud storage` });
+        return publicUrl;
       } catch (error) {
-        console.error('Upload failed:', error);
+        console.error('S3 upload failed:', error);
         toast({
           title: 'Upload failed',
           description: error instanceof Error ? error.message : 'Failed to upload file',
-          variant: 'destructive',
+          variant: 'destructive'
         });
-        
         return '/placeholder.svg';
       }
     },
@@ -1058,7 +1033,8 @@ const ComprehensiveAdmin: React.FC = () => {
   };
 
   const handleRoomUpdate = (id: number, updates: Partial<RoomItem>) => {
-  setRoomsDraft((prev) => prev.map((room) => (room.id === id ? { ...room, ...updates } : room)));
+    console.log('Room update:', { id, updates });
+    setRoomsDraft((prev) => prev.map((room) => (room.id === id ? { ...room, ...updates } : room)));
   };
 
   const handleRoomDelete = (id: number) => {
@@ -1833,9 +1809,14 @@ const ComprehensiveAdmin: React.FC = () => {
             <h1 className="text-2xl font-semibold text-slate-900">Content & Media Console</h1>
             <p className="text-xs text-slate-500">v2.1.0 - Build {new Date().toISOString().slice(0,16).replace('T',' ')}</p>
           </div>
-          <Button variant="outline" className="gap-2" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" /> Sign out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" className="gap-2" onClick={clearStorageAndRefresh}>
+              <Trash2 className="h-4 w-4" /> Clear cache
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" /> Sign out
+            </Button>
+          </div>
         </div>
       </header>
 

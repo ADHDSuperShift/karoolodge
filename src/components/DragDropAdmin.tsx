@@ -136,19 +136,14 @@ const DragDropAdmin = () => {
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
     
     for (const file of imageFiles) {
-      // Convert to base64 or use URL.createObjectURL for local display
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        const newImage: ImageItem = {
-          id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          url: result,
-          title: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
-          order: images.length
-        };
-        setImages(prev => [...prev, newImage]);
+      const objectUrl = URL.createObjectURL(file);
+      const newImage: ImageItem = {
+        id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        url: objectUrl,
+        title: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
+        order: images.length
       };
-      reader.readAsDataURL(file);
+      setImages(prev => [...prev, newImage]);
     }
     
     if (imageFiles.length > 0) {
@@ -445,7 +440,7 @@ const DragDropAdmin = () => {
                         }}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y3ZjhmOSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmI3Mjg2Ij7wn5OKIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+                          target.src = '/placeholder.svg';
                         }}
                       />
                       <div style={{ padding: '1.5rem' }}>
@@ -532,7 +527,7 @@ const DragDropAdmin = () => {
                     }}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIyMCIgZmlsbD0iI2Y3ZjhmOSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmI3Mjg2Ij7wn5OKIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+                      target.src = '/placeholder.svg';
                     }}
                   />
                   <div style={{ padding: '1.5rem' }}>

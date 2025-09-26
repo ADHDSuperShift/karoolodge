@@ -1,4 +1,3 @@
-
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
@@ -7,7 +6,8 @@ import './index.css';
 
 // ✅ Amplify v6+ import
 import { Amplify } from "aws-amplify";
-import amplifyconfig from "./amplifyconfiguration.json";
+// Use amplifyconfiguration.ts (aws-exports is not present in this repo)
+import amplifyconfig from "./amplifyconfiguration";
 
 // ✅ Configure Amplify
 Amplify.configure(amplifyconfig);

@@ -130,6 +130,20 @@ const fixUrlProtocol = (url: string): string => {
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   if (url.startsWith('data:')) return url;
   if (url.startsWith('/')) return url; // relative URLs are OK
+  
+  // If it looks like an S3 key/path without protocol, add the S3 URL
+  if (url.includes('.amazonaws.com') && !url.startsWith('http')) {
+    return `https://${url}`;
+  }
+  
+  // If it's just a filename or path, assume it's an S3 object
+  if (url && !url.includes('://') && !url.startsWith('data:') && !url.startsWith('/')) {
+    // Use the S3 bucket from the configuration (aligned with amplifyconfiguration.ts)
+    const bucketName = 'barrydalekaroo185607-dev';
+    const region = 'us-east-1';
+    return `https://${bucketName}.s3.${region}.amazonaws.com/${url}`;
+  }
+  
   return url;
 };
 
@@ -656,6 +670,18 @@ export const GlobalStateProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
 const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
+    // Load saved global (non-gallery) state from localStorage
+    let savedGlobal: Partial<GlobalState> | null = null;
+    try {
+      const savedGlobalJson = localStorage.getItem('karoo-global-state');
+      if (savedGlobalJson) {
+        savedGlobal = JSON.parse(savedGlobalJson);
+        console.log('Loaded global state from localStorage');
+      }
+    } catch (error) {
+      console.error('Failed to load global state from localStorage:', error);
+    }
+
     // Load saved gallery from localStorage
     let savedGallery = null;
     try {
@@ -679,34 +705,42 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
         src: fixUrlProtocol(img.src)
       })),
       sectionBackgrounds:
-        saved?.sectionBackgrounds && saved.sectionBackgrounds.length
-          ? saved.sectionBackgrounds.map(bg => ({
+        (savedGlobal?.sectionBackgrounds && savedGlobal.sectionBackgrounds.length
+          ? savedGlobal.sectionBackgrounds
+          : saved?.sectionBackgrounds) && (savedGlobal?.sectionBackgrounds?.length || saved?.sectionBackgrounds?.length)
+          ? (savedGlobal?.sectionBackgrounds || saved!.sectionBackgrounds).map(bg => ({
               ...bg,
               imageUrl: fixUrlProtocol(bg.imageUrl)
             }))
           : defaultState.sectionBackgrounds,
       wineCollection:
-        saved?.wineCollection && saved.wineCollection.length 
-          ? saved.wineCollection.map(wine => ({
+        (savedGlobal?.wineCollection && savedGlobal.wineCollection.length
+          ? savedGlobal.wineCollection
+          : saved?.wineCollection) && (savedGlobal?.wineCollection?.length || saved?.wineCollection?.length)
+          ? (savedGlobal?.wineCollection || saved!.wineCollection).map(wine => ({
               ...wine,
               image: fixUrlProtocol(wine.image)
             }))
           : defaultState.wineCollection,
-      rooms: ensureRooms(saved?.rooms).map(room => ({
+      rooms: ensureRooms(savedGlobal?.rooms || saved?.rooms).map(room => ({
         ...room,
         images: room.images.map(fixUrlProtocol)
       })),
-      events: saved?.events && saved.events.length ? saved.events : defaultState.events,
+      events: savedGlobal?.events && savedGlobal.events.length
+        ? savedGlobal.events
+        : saved?.events && saved.events.length
+          ? saved.events
+          : defaultState.events,
       siteContent: {
         ...defaultState.siteContent,
-        ...saved?.siteContent,
+        ...(savedGlobal?.siteContent ?? saved?.siteContent ?? {}),
         contactInfo: {
           ...defaultState.siteContent.contactInfo,
-          ...(saved?.siteContent?.contactInfo ?? {})
+          ...((savedGlobal?.siteContent?.contactInfo ?? saved?.siteContent?.contactInfo) ?? {})
         },
         socialMedia: {
           ...defaultState.siteContent.socialMedia,
-          ...(saved?.siteContent?.socialMedia ?? {})
+          ...((savedGlobal?.siteContent?.socialMedia ?? saved?.siteContent?.socialMedia) ?? {})
         }
       }
     };
@@ -716,16 +750,17 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
     const initialState = hydrateState(null);
     console.log('GlobalStateContext: Initial state loaded with', initialState.galleryImages.length, 'gallery images');
     
-    // Debug URL formats
+    // Debug URL formats and clean up bad URLs
     const badUrls = [
       ...initialState.galleryImages,
       ...initialState.sectionBackgrounds.map(bg => ({ src: bg.imageUrl, title: bg.title })),
       ...initialState.wineCollection.map(wine => ({ src: wine.image, title: wine.name })),
       ...initialState.rooms.flatMap(room => room.images.map((img, idx) => ({ src: img, title: `${room.name} ${idx + 1}` })))
-    ].filter(item => item.src && !item.src.startsWith('http'));
+    ].filter(item => item.src && !item.src.startsWith('http') && !item.src.startsWith('data:') && !item.src.startsWith('/'));
     
     if (badUrls.length > 0) {
       console.warn('Found URLs without protocol:', badUrls);
+      console.log('URLs have been fixed with S3 domain. If images still don\'t load, clear localStorage.');
     }
     
     return initialState;
@@ -816,7 +851,17 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
   // Section backgrounds management
   const updateSectionBackgrounds = (backgrounds: SectionBackground[]) => {
     console.log('GlobalState: updateSectionBackgrounds called with', backgrounds.length, 'backgrounds');
-    setState(prev => ({ ...prev, sectionBackgrounds: backgrounds }));
+    setState(prev => {
+      const next = { ...prev, sectionBackgrounds: backgrounds };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const updateSectionBackground = (background: SectionBackground) => {
@@ -825,97 +870,247 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
       imageUrl: fixUrlProtocol(background.imageUrl)
     };
     
-    setState(prev => ({
-      ...prev,
-      sectionBackgrounds: prev.sectionBackgrounds.map(bg => 
-        bg.section === fixedBackground.section ? fixedBackground : bg
-      )
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        sectionBackgrounds: prev.sectionBackgrounds.map(bg => 
+          bg.section === fixedBackground.section ? fixedBackground : bg
+        )
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   // Wine collection management
   const updateWineCollection = (wines: WineItem[]) => {
     console.log('GlobalState: updateWineCollection called with', wines.length, 'wines');
-    setState(prev => ({ ...prev, wineCollection: wines }));
+    setState(prev => {
+      const next = { ...prev, wineCollection: wines };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const addWine = (wine: WineItem) => {
-    setState(prev => ({ ...prev, wineCollection: [...prev.wineCollection, wine] }));
+    setState(prev => {
+      const next = { ...prev, wineCollection: [...prev.wineCollection, wine] };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const updateWine = (wine: WineItem) => {
-    setState(prev => ({
-      ...prev,
-      wineCollection: prev.wineCollection.map(w => w.id === wine.id ? wine : w)
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        wineCollection: prev.wineCollection.map(w => w.id === wine.id ? wine : w)
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const deleteWine = (id: number) => {
-    setState(prev => ({
-      ...prev,
-      wineCollection: prev.wineCollection.filter(w => w.id !== id)
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        wineCollection: prev.wineCollection.filter(w => w.id !== id)
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   // Room management
   const updateRooms = (rooms: Room[]) => {
-    setState(prev => ({ ...prev, rooms: ensureRooms(rooms) }));
+    setState(prev => {
+      const next = { ...prev, rooms: ensureRooms(rooms) };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const addRoom = (room: Room) => {
-    setState(prev => ({ ...prev, rooms: ensureRooms([...prev.rooms, room]) }));
+    setState(prev => {
+      const next = { ...prev, rooms: ensureRooms([...prev.rooms, room]) };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const updateRoom = (room: Room) => {
-    setState(prev => ({
-      ...prev,
-      rooms: ensureRooms(prev.rooms.map(r => (r.id === room.id ? room : r)))
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        rooms: ensureRooms(prev.rooms.map(r => r.id === room.id ? room : r))
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const deleteRoom = (id: number) => {
-    setState(prev => ({
-      ...prev,
-      rooms: ensureRooms(prev.rooms.filter(r => r.id !== id))
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        rooms: ensureRooms(prev.rooms.filter(r => r.id !== id))
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   // Event management
   const updateEvents = (events: Event[]) => {
-    setState(prev => ({ ...prev, events }));
+    setState(prev => {
+      const next = { ...prev, events };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const addEvent = (event: Event) => {
-    setState(prev => ({ ...prev, events: [...prev.events, event] }));
+    setState(prev => {
+      const next = { ...prev, events: [...prev.events, event] };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const updateEvent = (event: Event) => {
-    setState(prev => ({
-      ...prev,
-      events: prev.events.map(e => e.id === event.id ? event : e)
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        events: prev.events.map(e => e.id === event.id ? event : e)
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const deleteEvent = (id: number) => {
-    setState(prev => ({
-      ...prev,
-      events: prev.events.filter(e => e.id !== id)
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        events: prev.events.filter(e => e.id !== id)
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   // Site content management
   const updateSiteContent = (content: Partial<SiteContent>) => {
-    setState(prev => ({
-      ...prev,
-      siteContent: { ...prev.siteContent, ...content }
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        siteContent: { ...prev.siteContent, ...content }
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const updateLogo = (logoUrl: string) => {
-    setState(prev => ({
-      ...prev,
-      siteContent: { ...prev.siteContent, logoUrl }
-    }));
+    setState(prev => {
+      const next = {
+        ...prev,
+        siteContent: { ...prev.siteContent, logoUrl }
+      };
+      try { localStorage.setItem('karoo-global-state', JSON.stringify({
+        rooms: next.rooms,
+        sectionBackgrounds: next.sectionBackgrounds,
+        wineCollection: next.wineCollection,
+        events: next.events,
+        siteContent: next.siteContent
+      })); } catch {}
+      return next;
+    });
   };
 
   const value: GlobalStateContextType = {
