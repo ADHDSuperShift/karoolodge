@@ -662,6 +662,45 @@ export const useGlobalState = () => {
 
 // Provider component
 export const GlobalStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Clean up broken localStorage data on initialization
+  React.useEffect(() => {
+    const cleanupBrokenData = () => {
+      try {
+        const galleryData = localStorage.getItem('karoo-gallery-state');
+        const globalData = localStorage.getItem('karoo-global-state');
+        
+        let needsCleanup = false;
+        
+        if (galleryData) {
+          const gallery = JSON.parse(galleryData);
+          if (gallery.some((img: any) => img.src && img.src.includes('undefined.s3.undefined.amazonaws.com'))) {
+            console.warn('Found broken gallery URLs, clearing localStorage');
+            localStorage.removeItem('karoo-gallery-state');
+            needsCleanup = true;
+          }
+        }
+        
+        if (globalData) {
+          const global = JSON.parse(globalData);
+          if (global.sectionBackgrounds?.some((bg: any) => bg.imageUrl && bg.imageUrl.includes('undefined.s3.undefined.amazonaws.com'))) {
+            console.warn('Found broken background URLs, clearing localStorage');
+            localStorage.removeItem('karoo-global-state');
+            needsCleanup = true;
+          }
+        }
+        
+        if (needsCleanup) {
+          console.log('Broken URLs detected and cleaned from localStorage');
+          window.location.reload(); // Force reload to reinitialize with clean state
+        }
+      } catch (error) {
+        console.error('Error cleaning localStorage:', error);
+      }
+    };
+    
+    cleanupBrokenData();
+  }, []);
+
   const normalizeRoom = (room: Room, index: number): Room => ({
     ...room,
     id: room.id ?? index + 1,
@@ -699,6 +738,15 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
       if (savedGalleryJson) {
         savedGallery = JSON.parse(savedGalleryJson);
         console.log(`Loaded ${savedGallery.length} gallery images from localStorage`);
+        
+        // Clean broken URLs and remove items that can't be fixed
+        savedGallery = savedGallery.filter((img: any) => {
+          if (img.src && img.src.includes('undefined.s3.undefined.amazonaws.com')) {
+            console.warn('Removing broken gallery image:', img.title || img.id);
+            return false; // Remove completely broken images
+          }
+          return true;
+        });
       }
     } catch (error) {
       console.error('Failed to load gallery from localStorage:', error);
@@ -716,7 +764,14 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
       })),
       sectionBackgrounds:
         (savedGlobal?.sectionBackgrounds && savedGlobal.sectionBackgrounds.length
-          ? savedGlobal.sectionBackgrounds
+          ? savedGlobal.sectionBackgrounds.filter((bg: any) => {
+              // Clean broken background URLs  
+              if (bg.imageUrl && bg.imageUrl.includes('undefined.s3.undefined.amazonaws.com')) {
+                console.warn('Removing broken background image:', bg.section);
+                return false;
+              }
+              return true;
+            })
           : saved?.sectionBackgrounds) && (savedGlobal?.sectionBackgrounds?.length || saved?.sectionBackgrounds?.length)
           ? (savedGlobal?.sectionBackgrounds || saved!.sectionBackgrounds).map(bg => ({
               ...bg,
