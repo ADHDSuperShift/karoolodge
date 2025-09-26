@@ -2,12 +2,12 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Amplify } from 'aws-amplify';
-import amplifyconfig from './amplifyconfiguration.json';
+import amplifyConfig from './amplifyconfiguration';
 import App from './App.tsx';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 import './index.css';
 
-Amplify.configure(amplifyconfig);
+Amplify.configure(amplifyConfig);
 
 const root = createRoot(document.getElementById('root')!);
 

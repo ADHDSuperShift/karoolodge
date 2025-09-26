@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Storage } from 'aws-amplify';
+import { uploadData, getUrl } from 'aws-amplify/storage';
 import {
   DndContext,
   DragEndEvent,
@@ -973,8 +973,22 @@ const ComprehensiveAdmin: React.FC = () => {
         // Upload to S3
         const uploadFileToS3 = async (file: File, folder: string) => {
           const key = `${folder}/${Date.now()}-${file.name}`;
-          await Storage.put(key, file, { contentType: file.type });
-          return Storage.get(key); // returns a URL
+          
+          // Upload the file
+          await uploadData({
+            key: key,
+            data: file,
+            options: {
+              contentType: file.type
+            }
+          }).result;
+          
+          // Get the URL
+          const url = await getUrl({
+            key: key
+          });
+          
+          return url.url.toString();
         };
         
         const uploadedUrl = await uploadFileToS3(file, folder);
