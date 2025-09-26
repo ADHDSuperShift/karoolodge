@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { uploadData } from 'aws-amplify/storage';
-import amplifyConfig from '../amplifyconfiguration.ts';
+import amplifyConfig from '../amplifyconfiguration';
 import {
   DndContext,
   DragEndEvent,
