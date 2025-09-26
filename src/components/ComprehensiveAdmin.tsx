@@ -55,6 +55,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalState } from '@/contexts/GlobalStateContext';
 import { cn } from '@/lib/utils';
 import UploadDebug from './UploadDebug';
+import CreateTestUser from './CreateTestUser';
 
 const galleryCategories: Array<{
   value: 'rooms' | 'dining' | 'bar' | 'wine' | 'scenery';
@@ -878,7 +879,7 @@ const ComprehensiveAdmin: React.FC = () => {
 
   const [authUsername, setAuthUsername] = useState('');
   const [authPassword, setAuthPassword] = useState('');
-  const [activeTab, setActiveTab] = useState<'rooms' | 'gallery' | 'backgrounds' | 'content' | 'wine' | 'events'>('rooms');
+  const [activeTab, setActiveTab] = useState<'rooms' | 'gallery' | 'backgrounds' | 'content' | 'wine' | 'events' | 'users'>('rooms');
 
   const [roomsDraft, setRoomsDraft] = useState(rooms);
   const [wineDraft, setWineDraft] = useState(wineCollection);
@@ -1826,7 +1827,7 @@ const ComprehensiveAdmin: React.FC = () => {
 
       <main className="mx-auto mt-8 max-w-6xl space-y-6 px-4">
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="rooms" className="gap-2">
               <Bed className="h-4 w-4" /> Rooms
             </TabsTrigger>
@@ -1844,6 +1845,9 @@ const ComprehensiveAdmin: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="events" className="gap-2">
               <Calendar className="h-4 w-4" /> Events
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-2">
+              <Settings className="h-4 w-4" /> Users
             </TabsTrigger>
           </TabsList>
 
@@ -1869,6 +1873,26 @@ const ComprehensiveAdmin: React.FC = () => {
 
           <TabsContent value="events" className="pt-6">
             {renderEventsTab()}
+          </TabsContent>
+
+          <TabsContent value="users" className="pt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CreateTestUser />
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-semibold text-blue-800 mb-2">Authentication Instructions:</h4>
+                  <ol className="list-decimal list-inside text-sm text-blue-700 space-y-1">
+                    <li>Create a user using the form above</li>
+                    <li>Check your email for the confirmation code</li>
+                    <li>Once confirmed, use the email/password to sign in</li>
+                    <li>After signing in with Cognito, S3 uploads will work properly</li>
+                  </ol>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>

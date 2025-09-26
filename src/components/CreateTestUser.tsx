@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CognitoUserPool, CognitoUserAttribute } from 'amazon-cognito-identity-js';
+import { signUp, confirmSignUp } from 'aws-amplify/auth';
 
 const CreateTestUser: React.FC = () => {
   const [email, setEmail] = useState('test@example.com');
@@ -8,46 +8,26 @@ const CreateTestUser: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const createUser = async () => {
-    const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID;
-    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-    
-    if (!userPoolId || !clientId) {
-      setResult('❌ Environment variables not set');
-      return;
-    }
-
     setIsLoading(true);
     setResult('');
 
     try {
-      const userPool = new CognitoUserPool({
-        UserPoolId: userPoolId,
-        ClientId: clientId
+      const { user } = await signUp({
+        username: email,
+        password: password,
+        options: {
+          userAttributes: {
+            email: email,
+          },
+        },
       });
 
-      const attributeList = [
-        new CognitoUserAttribute({
-          Name: 'email',
-          Value: email
-        })
-      ];
-
-      userPool.signUp(email, password, attributeList, [], (err, result) => {
-        setIsLoading(false);
-        if (err) {
-          console.error('Sign up error:', err);
-          setResult(`❌ Error creating user: ${err.message}`);
-          return;
-        }
-
-        if (result) {
-          setResult(`✅ User created successfully! Username: ${result.user.getUsername()}. Check your email for confirmation.`);
-        }
-      });
-
-    } catch (error) {
+      setResult(`✅ User created successfully! Username: ${user.username}. Check your email for confirmation code.`);
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      setResult(`❌ Error creating user: ${error.message}`);
+    } finally {
       setIsLoading(false);
-      setResult(`❌ Error: ${error.message}`);
     }
   };
 

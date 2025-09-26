@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { signIn as amplifySignIn, signOut as amplifySignOut, getCurrentUser } from 'aws-amplify/auth';
 
 // Simple placeholder authentication
 interface AuthContextType {
@@ -26,10 +27,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing session on mount
   useEffect(() => {
-    const savedAuth = localStorage.getItem('temp-auth');
-    if (savedAuth === 'authenticated') {
-      setIsAuthenticated(true);
-    }
+    const checkAuthState = async () => {
+      try {
+        await getCurrentUser();
+        setIsAuthenticated(true);
+      } catch (error) {
+        // User is not authenticated
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuthState();
   }, []);
 
   const signIn = async (username: string, password: string): Promise<void> => {
@@ -37,12 +44,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     
     try {
-      // Simple placeholder credentials
-      if (username === 'admin@example.com' && password === 'temporary123') {
+      const { isSignedIn } = await amplifySignIn({ username, password });
+      if (isSignedIn) {
         setIsAuthenticated(true);
-        localStorage.setItem('temp-auth', 'authenticated');
-      } else {
-        throw new Error('Invalid credentials. Use admin@example.com / temporary123');
       }
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Authentication failed');
@@ -52,9 +56,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = (): void => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('temp-auth');
+  const signOut = async (): Promise<void> => {
+    try {
+      await amplifySignOut();
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   const value: AuthContextType = {
