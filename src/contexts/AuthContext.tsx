@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getCurrentUser, fetchAuthSession, signIn as amplifySignIn, signOut as amplifySignOut } from 'aws-amplify/auth';
 
-// Amplify-backed authentication for admin console
+// Simple placeholder authentication
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   authError: string | null;
   signIn: (username: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,53 +21,40 @@ export const useAuth = (): AuthContextType => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // On mount, check current user/session to decide auth state
+  // Check for existing session on mount
   useEffect(() => {
-    const init = async () => {
-      setIsLoading(true);
-      try {
-        await getCurrentUser();
-        // Ensure credentials are refreshed for Storage to use authenticated role
-        await fetchAuthSession();
-        setIsAuthenticated(true);
-      } catch {
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    void init();
+    const savedAuth = localStorage.getItem('temp-auth');
+    if (savedAuth === 'authenticated') {
+      setIsAuthenticated(true);
+    }
   }, []);
 
   const signIn = async (username: string, password: string): Promise<void> => {
     setIsLoading(true);
     setAuthError(null);
+    
     try {
-      await amplifySignIn({ username, password });
-      // After successful sign-in, refresh credentials so Storage picks up authenticated identity
-      await fetchAuthSession();
-      setIsAuthenticated(true);
+      // Simple placeholder credentials
+      if (username === 'admin@example.com' && password === 'temporary123') {
+        setIsAuthenticated(true);
+        localStorage.setItem('temp-auth', 'authenticated');
+      } else {
+        throw new Error('Invalid credentials. Use admin@example.com / temporary123');
+      }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Authentication failed';
-      setAuthError(message);
+      setAuthError(error instanceof Error ? error.message : 'Authentication failed');
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signOut = async (): Promise<void> => {
-    setIsLoading(true);
-    setAuthError(null);
-    try {
-      await amplifySignOut();
-    } finally {
-      setIsAuthenticated(false);
-      setIsLoading(false);
-    }
+  const signOut = (): void => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('temp-auth');
   };
 
   const value: AuthContextType = {

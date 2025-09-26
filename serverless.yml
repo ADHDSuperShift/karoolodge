@@ -1,0 +1,369 @@
+service: karoo-lodge-backend
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+  timeout: 29
+  
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    GALLERY_TABLE: ${self:service}-gallery-${self:provider.stage}
+    ROOMS_TABLE: ${self:service}-rooms-${self:provider.stage}
+    WINES_TABLE: ${self:service}-wines-${self:provider.stage}
+    SETTINGS_TABLE: ${self:service}-settings-${self:provider.stage}
+    MEDIA_BUCKET: ${self:service}-media-${self:provider.stage}
+    USER_POOL_ID: !Ref CognitoUserPool
+    USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+    CLOUDFRONT_DOMAIN: !GetAtt CloudFrontDistribution.DomainName
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - !GetAtt GalleryTable.Arn
+            - !GetAtt RoomsTable.Arn
+            - !GetAtt WinesTable.Arn
+            - !GetAtt SettingsTable.Arn
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+            - s3:GetObjectAcl
+            - s3:PutObjectAcl
+          Resource:
+            - !Sub "arn:aws:s3:::${MediaBucket}/*"
+        - Effect: Allow
+          Action:
+            - s3:ListBucket
+          Resource:
+            - !Sub "arn:aws:s3:::${MediaBucket}"
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+            - cognito-idp:AdminListGroupsForUser
+          Resource:
+            - !GetAtt CognitoUserPool.Arn
+
+functions:
+  # Authentication
+  auth:
+    handler: src/handlers/auth.handler
+    events:
+      - http:
+          path: /auth/login
+          method: post
+          cors: true
+      - http:
+          path: /auth/refresh
+          method: post
+          cors: true
+
+  # Gallery Management
+  galleryList:
+    handler: src/handlers/gallery.list
+    events:
+      - http:
+          path: /gallery
+          method: get
+          cors: true
+
+  galleryCreate:
+    handler: src/handlers/gallery.create
+    events:
+      - http:
+          path: /gallery
+          method: post
+          cors: true
+
+  galleryUpdate:
+    handler: src/handlers/gallery.update
+    events:
+      - http:
+          path: /gallery/{id}
+          method: put
+          cors: true
+
+  galleryDelete:
+    handler: src/handlers/gallery.remove
+    events:
+      - http:
+          path: /gallery/{id}
+          method: delete
+          cors: true
+
+  # Rooms Management
+  roomsList:
+    handler: src/handlers/rooms.list
+    events:
+      - http:
+          path: /rooms
+          method: get
+          cors: true
+
+  roomsUpdate:
+    handler: src/handlers/rooms.update
+    events:
+      - http:
+          path: /rooms
+          method: put
+          cors: true
+
+  # Wine Collection
+  winesList:
+    handler: src/handlers/wines.list
+    events:
+      - http:
+          path: /wines
+          method: get
+          cors: true
+
+  winesUpdate:
+    handler: src/handlers/wines.update
+    events:
+      - http:
+          path: /wines
+          method: put
+          cors: true
+
+  # File Upload
+  uploadUrl:
+    handler: src/handlers/upload.getSignedUrl
+    events:
+      - http:
+          path: /upload/signed-url
+          method: post
+          cors: true
+
+  # Settings/Configuration
+  settingsGet:
+    handler: src/handlers/settings.get
+    events:
+      - http:
+          path: /settings
+          method: get
+          cors: true
+
+  settingsUpdate:
+    handler: src/handlers/settings.update
+    events:
+      - http:
+          path: /settings
+          method: put
+          cors: true
+
+resources:
+  Resources:
+    # DynamoDB Tables
+    GalleryTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.GALLERY_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: category
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: CategoryIndex
+            KeySchema:
+              - AttributeName: category
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    RoomsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.ROOMS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+
+    WinesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.WINES_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: category
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: CategoryIndex
+            KeySchema:
+              - AttributeName: category
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    SettingsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.SETTINGS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: key
+            AttributeType: S
+        KeySchema:
+          - AttributeName: key
+            KeyType: HASH
+
+    # S3 Bucket for Media Storage
+    MediaBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.MEDIA_BUCKET}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ["*"]
+              AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
+              AllowedOrigins: ["*"]
+              ExposedHeaders: [ETag]
+              MaxAge: 3000
+        VersioningConfiguration:
+          Status: Enabled
+
+    # CloudFront Distribution
+    CloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Origins:
+            - DomainName: !GetAtt MediaBucket.RegionalDomainName
+              Id: S3Origin
+              S3OriginConfig:
+                OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
+          Enabled: true
+          DefaultCacheBehavior:
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
+            CachedMethods: [GET, HEAD]
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
+            MinTTL: 0
+            DefaultTTL: 86400
+            MaxTTL: 31536000
+          PriceClass: PriceClass_100
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
+
+    # CloudFront Origin Access Identity
+    CloudFrontOriginAccessIdentity:
+      Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+      Properties:
+        CloudFrontOriginAccessIdentityConfig:
+          Comment: !Sub "OAI for ${self:service}"
+
+    # S3 Bucket Policy
+    MediaBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref MediaBucket
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOriginAccessIdentity}"
+              Action: s3:GetObject
+              Resource: !Sub "arn:aws:s3:::${MediaBucket}/*"
+
+    # Cognito User Pool
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-user-pool-${self:provider.stage}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+        Schema:
+          - AttributeDataType: String
+            Name: email
+            Required: true
+            Mutable: true
+
+    # Cognito User Pool Client
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-client-${self:provider.stage}
+        UserPoolId: !Ref CognitoUserPool
+        GenerateSecret: false
+        SupportedIdentityProviders:
+          - COGNITO
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthFlows:
+          - code
+          - implicit
+        AllowedOAuthScopes:
+          - phone
+          - email
+          - openid
+        CallbackURLs:
+          - http://localhost:8080
+          - https://localhost:8080
+        LogoutURLs:
+          - http://localhost:8080
+          - https://localhost:8080
+        ExplicitAuthFlows:
+          - ADMIN_NO_SRP_AUTH
+          - USER_PASSWORD_AUTH
+
+  Outputs:
+    UserPoolId:
+      Description: "Cognito User Pool ID"
+      Value: !Ref CognitoUserPool
+
+    UserPoolClientId:
+      Description: "Cognito User Pool Client ID"
+      Value: !Ref CognitoUserPoolClient
+
+    CloudFrontDomain:
+      Description: "CloudFront Distribution Domain"
+      Value: !GetAtt CloudFrontDistribution.DomainName
+
+    MediaBucketName:
+      Description: "S3 Media Bucket Name"
+      Value: !Ref MediaBucket
+
+

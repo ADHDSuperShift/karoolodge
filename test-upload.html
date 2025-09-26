@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>S3 Upload Test</title>
+</head>
+<body>
+    <h1>S3 CORS Upload Test</h1>
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="testUpload()">Test Upload</button>
+    <div id="result"></div>
+
+    <script>
+        async function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = 'Please select a file first';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            try {
+                // Step 1: Get upload URL
+                const response = await fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/upload-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
+                    },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        contentType: file.type
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Upload URL response:', data);
+                
+                // Step 2: Upload to S3
+                const uploadResponse = await fetch(data.uploadURL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': file.type
+                    },
+                    body: file
+                });
+                
+                console.log('Upload response status:', uploadResponse.status);
+                console.log('Upload response headers:', [...uploadResponse.headers.entries()]);
+                
+                if (uploadResponse.ok) {
+                    resultDiv.innerHTML = `✅ Upload successful! File URL: ${data.fileUrl}`;
+                } else {
+                    resultDiv.innerHTML = `❌ Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`;
+                }
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

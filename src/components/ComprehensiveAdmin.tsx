@@ -50,8 +50,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { uploadData, getUrl } from 'aws-amplify/storage';
-import { fetchAuthSession } from 'aws-amplify/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalState } from '@/contexts/GlobalStateContext';
 import { cn } from '@/lib/utils';
@@ -954,68 +952,39 @@ const ComprehensiveAdmin: React.FC = () => {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // AWS Amplify S3 upload function
+  // Simple placeholder upload (returns placeholder URL)
   const uploadFileToS3 = useCallback(
     async (file: File, folder: string): Promise<string> => {
       try {
-        // Ensure authenticated identity is used for Storage writes
-        if (!isAuthenticated) {
-          throw new Error('Please sign in before uploading files.');
-        }
-        await fetchAuthSession();
-        // Create a unique filename
+        // Create a fake URL for placeholder
         const timestamp = Date.now();
         const fileExtension = file.name.split('.').pop();
-        const keyPrefix = folder.startsWith('media/') ? folder : `media/${folder}`;
-        const fileName = `${keyPrefix}/${timestamp}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+        const fakeUrl = `/placeholder-${timestamp}.${fileExtension}`;
         
-        console.log('Uploading to S3:', fileName);
+        console.log('Mock upload:', file.name, 'to', folder);
         
-        // Upload file to S3 using Amplify Storage
-        const result = await uploadData({
-          path: fileName,
-          data: file,
-          options: {
-            contentType: file.type,
-            onProgress: ({ totalBytes, transferredBytes }) => {
-              if (totalBytes) {
-                const progress = Math.round((transferredBytes / totalBytes) * 100);
-                console.log(`Upload progress: ${progress}%`);
-              }
-            },
-          },
-        }).result;
-
-        console.log('Upload successful:', result);
+        // Simulate upload delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Get the public URL for the uploaded file
-  const urlResult = await getUrl({ key: fileName });
-
-        const publicUrl = urlResult.url.toString();
-        console.log('Public URL:', publicUrl);
-
         toast({
-          title: 'Upload successful',
-          description: `${file.name} uploaded successfully`,
+          title: 'Mock upload successful',
+          description: `${file.name} uploaded (placeholder mode)`,
         });
 
-        return publicUrl;
+        return fakeUrl;
       } catch (error) {
-        console.error('Upload failed:', error);
+        console.error('Mock upload failed:', error);
         toast({
           title: 'Upload failed',
           description: error instanceof Error ? error.message : 'Failed to upload file',
           variant: 'destructive',
         });
         
-        // Return placeholder on error
         return '/placeholder.svg';
       }
     },
-  [toast, isAuthenticated]
-  );
-
-  const handleRoomsDragEnd = (event: DragEndEvent) => {
+    [toast]
+  );  const handleRoomsDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
