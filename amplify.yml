@@ -3,15 +3,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Cleaning up to fix Rollup native dependencies issue"
-        - echo "Switching to Node 20 LTS to avoid npm optional deps bug"
         - nvm install 20 || true
         - nvm use 20 || true
         - node -v && npm -v
-  - npm cache clean --force || true
-  - rm -rf ~/.npm || true
-  - rm -rf node_modules
-  - npm ci || npm install
+        - npm ci || npm install
     build:
       commands:
         - npm run build
