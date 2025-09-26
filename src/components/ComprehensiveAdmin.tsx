@@ -35,7 +35,12 @@ import {
   Clock,
   MapPin,
   Wine as WineIcon,
-  Loader2
+  Loader2,
+  Eye,
+  FileText,
+  Layout,
+  Settings,
+  Edit3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,11 +50,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { uploadData, getUrl } from 'aws-amplify/storage';
 import { useAuth } from '@/contexts/AuthContext';
-import CognitoTest from './CognitoTest';
-import CreateTestUser from './CreateTestUser';
-import { cn } from '@/lib/utils';
 import { useGlobalState } from '@/contexts/GlobalStateContext';
+import { cn } from '@/lib/utils';
 
 const galleryCategories: Array<{
   value: 'rooms' | 'dining' | 'bar' | 'wine' | 'scenery';
@@ -263,14 +267,22 @@ const BackgroundTile: React.FC<BackgroundTileProps> = ({ background, onDropFile,
             </a>
           </div>
           <div>
-            <Input type="file" accept="image/*" onChange={handleFileInput} />
+            <Input 
+              id={`background-upload-${background.section}`}
+              name={`background-upload-${background.section}`}
+              type="file" 
+              accept="image/*" 
+              onChange={handleFileInput} 
+            />
           </div>
         </div>
 
         <div className="space-y-3">
           <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-wide text-slate-500">Title</Label>
+            <Label htmlFor={`title-${background.section}`} className="text-xs uppercase tracking-wide text-slate-500">Title</Label>
             <Input
+              id={`title-${background.section}`}
+              name={`title-${background.section}`}
               value={background.title}
               onChange={(event) => onMetaChange(background.section, { title: event.target.value })}
             />
@@ -293,6 +305,7 @@ const BackgroundTile: React.FC<BackgroundTileProps> = ({ background, onDropFile,
 type RoomItem = ReturnType<typeof useGlobalState>['rooms'][number];
 type WineItemState = ReturnType<typeof useGlobalState>['wineCollection'][number];
 type EventItem = ReturnType<typeof useGlobalState>['events'][number];
+type GalleryItem = ReturnType<typeof useGlobalState>['galleryImages'][number];
 
 const toSlug = (value: string, fallback: string) => {
   const slug = value
@@ -421,17 +434,32 @@ const SortableRoomCard: React.FC<SortableRoomCardProps> = ({ room, onUpdate, onD
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wide text-slate-500">Room name</Label>
-              <Input value={room.name} onChange={(event) => onUpdate(room.id, { name: event.target.value })} />
+              <Label htmlFor={`room-name-${room.id}`} className="text-xs uppercase tracking-wide text-slate-500">Room name</Label>
+              <Input 
+                id={`room-name-${room.id}`}
+                name={`room-name-${room.id}`}
+                value={room.name} 
+                onChange={(event) => onUpdate(room.id, { name: event.target.value })} 
+              />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wide text-slate-500">Category</Label>
-              <Input value={room.category} onChange={(event) => onUpdate(room.id, { category: event.target.value })} />
+              <Label htmlFor={`room-category-${room.id}`} className="text-xs uppercase tracking-wide text-slate-500">Category</Label>
+              <Input 
+                id={`room-category-${room.id}`}
+                name={`room-category-${room.id}`}
+                value={room.category} 
+                onChange={(event) => onUpdate(room.id, { category: event.target.value })} 
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wide text-slate-500">Nightly rate</Label>
-                <Input value={room.price} onChange={(event) => onUpdate(room.id, { price: event.target.value })} />
+                <Label htmlFor={`room-price-${room.id}`} className="text-xs uppercase tracking-wide text-slate-500">Nightly rate</Label>
+                <Input 
+                  id={`room-price-${room.id}`}
+                  name={`room-price-${room.id}`}
+                  value={room.price} 
+                  onChange={(event) => onUpdate(room.id, { price: event.target.value })} 
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs uppercase tracking-wide text-slate-500">Guests</Label>
@@ -845,7 +873,7 @@ const ComprehensiveAdmin: React.FC = () => {
     updateLogo
   } = useGlobalState();
   const { toast } = useToast();
-  const { isAuthenticated, isLoading: authLoading, authError, signIn, signOut, apiKey } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, authError, signIn, signOut } = useAuth();
 
   const [authUsername, setAuthUsername] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -877,108 +905,109 @@ const ComprehensiveAdmin: React.FC = () => {
     setContentDraft(siteContent);
   }, [siteContent]);
 
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (contentDraft !== siteContent) {
+        updateSiteContent(contentDraft);
+      }
+    }, 200);
+    return () => window.clearTimeout(id);
+  }, [contentDraft, siteContent, updateSiteContent]);
+
+  // Debounced synchronizers to avoid updating GlobalState during render of this component
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (roomsDraft !== rooms) {
+        updateRooms(roomsDraft);
+      }
+    }, 150);
+    return () => window.clearTimeout(id);
+  }, [roomsDraft, rooms, updateRooms]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (wineDraft !== wineCollection) {
+        updateWineCollection(wineDraft);
+      }
+    }, 150);
+    return () => window.clearTimeout(id);
+  }, [wineDraft, wineCollection, updateWineCollection]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (eventsDraft !== events) {
+        updateEvents(eventsDraft);
+      }
+    }, 150);
+    return () => window.clearTimeout(id);
+  }, [eventsDraft, events, updateEvents]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (localGallery !== galleryImages) {
+        updateGalleryImages(localGallery);
+      }
+    }, 150);
+    return () => window.clearTimeout(id);
+  }, [localGallery, galleryImages, updateGalleryImages]);
+
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const uploadEndpoint = import.meta.env.VITE_UPLOAD_ENDPOINT || 'http://localhost:4000/api/upload-url';
-
+  // AWS Amplify S3 upload function
   const uploadFileToS3 = useCallback(
-    async (file: File, folder: string) => {
+    async (file: File, folder: string): Promise<string> => {
       try {
-        if (!apiKey) {
-          throw new Error('Missing upload credentials. Please sign in again.');
-        }
-
-        // Sanitize filename – backend will add timestamp to ensure uniqueness
-        const nameParts = file.name.split('.');
-        const extension = nameParts.pop() || '';
-        const baseNameRaw = nameParts.join('.') || 'upload';
-        const sanitizedBase = baseNameRaw.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const sanitizedFilename = extension ? `${sanitizedBase}.${extension}` : sanitizedBase;
-
-        console.log('Original filename:', file.name);
-        console.log('Sanitized filename:', sanitizedFilename);
-
-        const response = await fetch(uploadEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-          },
-          body: JSON.stringify({
-            filename: sanitizedFilename,
+        // Create a unique filename
+        const timestamp = Date.now();
+        const fileExtension = file.name.split('.').pop();
+        const fileName = `${folder}/${timestamp}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+        
+        console.log('Uploading to S3:', fileName);
+        
+        // Upload file to S3 using Amplify Storage
+        const result = await uploadData({
+          path: fileName,
+          data: file,
+          options: {
             contentType: file.type,
-            folder
-          })
+            onProgress: ({ totalBytes, transferredBytes }) => {
+              if (totalBytes) {
+                const progress = Math.round((transferredBytes / totalBytes) * 100);
+                console.log(`Upload progress: ${progress}%`);
+              }
+            },
+          },
+        }).result;
+
+        console.log('Upload successful:', result);
+        
+        // Get the public URL for the uploaded file
+        const urlResult = await getUrl({
+          key: fileName,
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to request upload URL');
-        }
+        const publicUrl = urlResult.url.toString();
+        console.log('Public URL:', publicUrl);
 
-        const { uploadURL: uploadUrl, fileUrl: fileUrlFromApi, key } = await response.json();
-
-        console.log('📤 Uploading:', sanitizedFilename, 'to folder:', folder);
-
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type
-          }
+        toast({
+          title: 'Upload successful',
+          description: `${file.name} uploaded successfully`,
         });
 
-        if (!uploadResponse.ok) {
-          const errorText = await uploadResponse.text();
-          console.error('❌ S3 Upload Failed:', uploadResponse.status, uploadResponse.statusText, errorText);
-          throw new Error(`Upload to S3 failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
-        }
-
-        console.log('✅ Upload successful!');
-        if (key) {
-          console.log('🆔 S3 object key:', key);
-        }
-
-        const s3Base = (fileUrlFromApi && typeof fileUrlFromApi === 'string' && fileUrlFromApi.length
-          ? fileUrlFromApi.replace(/^(https?:\/\/[^/]+).*/, '$1')
-          : uploadUrl.replace(/^(https?:\/\/[^/]+).*/, '$1')) || 'https://barrydale-media.s3.eu-west-1.amazonaws.com';
-
-        const cdnBaseRaw = import.meta.env.VITE_CLOUDFRONT_URL;
-        const cdnBase = cdnBaseRaw && cdnBaseRaw.length ? cdnBaseRaw.replace(/\/$/, '') : '';
-
-        const finalKey = (key && typeof key === 'string' && key.length)
-          ? key
-          : (() => {
-              const normalizedFolder = (folder ?? '')
-                .split('/')
-                .map(segment => segment.trim())
-                .filter(Boolean)
-                .join('/');
-              return `${normalizedFolder ? `${normalizedFolder}/` : ''}${sanitizedFilename}`;
-            })();
-
-        const finalUrlCandidate = `${s3Base}/${finalKey}`;
-
-        const finalUrl = fileUrlFromApi && typeof fileUrlFromApi === 'string' && fileUrlFromApi.length
-          ? fileUrlFromApi
-          : (cdnBase ? `${cdnBase}/${finalKey}` : finalUrlCandidate);
-
-        console.log('🌐 Final media URL:', finalUrl);
-
-        return finalUrl;
+        return publicUrl;
       } catch (error) {
-        console.error('Upload error', error);
+        console.error('Upload failed:', error);
         toast({
           title: 'Upload failed',
-          description:
-            error instanceof Error
-              ? error.message
-              : 'Could not upload file. Please try again.',
-          variant: 'destructive'
+          description: error instanceof Error ? error.message : 'Failed to upload file',
+          variant: 'destructive',
         });
-        throw error;
+        
+        // Return placeholder on error
+        return '/placeholder.svg';
       }
     },
-    [toast, uploadEndpoint, apiKey]
+    [toast]
   );
 
   const handleRoomsDragEnd = (event: DragEndEvent) => {
@@ -996,11 +1025,7 @@ const ComprehensiveAdmin: React.FC = () => {
   };
 
   const handleRoomUpdate = (id: number, updates: Partial<RoomItem>) => {
-    setRoomsDraft((prev) => {
-      const next = prev.map((room) => (room.id === id ? { ...room, ...updates } : room));
-      updateRooms(next);
-      return next;
-    });
+  setRoomsDraft((prev) => prev.map((room) => (room.id === id ? { ...room, ...updates } : room)));
   };
 
   const handleRoomDelete = (id: number) => {
@@ -1053,11 +1078,7 @@ const ComprehensiveAdmin: React.FC = () => {
   };
 
   const handleWineUpdate = (id: number, updates: Partial<WineItemState>) => {
-    setWineDraft((prev) => {
-      const next = prev.map((wine) => (wine.id === id ? { ...wine, ...updates } : wine));
-      updateWineCollection(next);
-      return next;
-    });
+  setWineDraft((prev) => prev.map((wine) => (wine.id === id ? { ...wine, ...updates } : wine)));
   };
 
   const handleWineDelete = (id: number) => {
@@ -1105,11 +1126,7 @@ const ComprehensiveAdmin: React.FC = () => {
   };
 
   const handleEventUpdate = (id: number, updates: Partial<EventItem>) => {
-    setEventsDraft((prev) => {
-      const next = prev.map((eventItem) => (eventItem.id === id ? { ...eventItem, ...updates } : eventItem));
-      updateEvents(next);
-      return next;
-    });
+  setEventsDraft((prev) => prev.map((eventItem) => (eventItem.id === id ? { ...eventItem, ...updates } : eventItem)));
   };
 
   const handleEventDelete = (id: number) => {
@@ -1184,11 +1201,7 @@ const ComprehensiveAdmin: React.FC = () => {
   };
 
   const handleGalleryMetaChange = (id: number, updates: Partial<SortableGalleryProps['image']>) => {
-    setLocalGallery((prev) => {
-      const amended = prev.map((item) => (item.id === id ? { ...item, ...updates } : item));
-      updateGalleryImages(amended);
-      return amended;
-    });
+  setLocalGallery((prev) => prev.map((item) => (item.id === id ? { ...item, ...updates } : item)));
   };
 
   const handleGalleryRemove = (id: number) => {
@@ -1208,33 +1221,25 @@ const ComprehensiveAdmin: React.FC = () => {
       try {
         const newItems = [] as typeof galleryImages;
         for (const file of imageFiles) {
+          const id = Date.now() + Math.floor(Math.random() * 1000);
           const publicUrl = await uploadFileToS3(file, 'gallery');
           const title = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim();
-          const image = {
+          const image: GalleryItem = {
+            id,
             src: publicUrl,
             category: 'scenery',
             title: title || 'New Image',
             description: ''
           };
-          // Persist to backend
-          await fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/gallery', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
-            },
-            body: JSON.stringify(image)
-          });
+          // TODO: Persist to new backend
+          console.log('Would save to backend:', image);
+          
           newItems.push(image);
         }
-        // Re-fetch gallery from backend
-        const res = await fetch('https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api/gallery', {
-          headers: {
-            'x-api-key': '79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159'
-          }
-        });
-        const gallery = await res.json();
-        setLocalGallery(gallery);
+        // TODO: Re-fetch gallery from new backend
+        console.log('Would fetch gallery from backend');
+        
+        setLocalGallery(prev => [...prev, ...newItems]);
         toast({
           title: 'Gallery updated',
           description: `${newItems.length} image${newItems.length > 1 ? 's' : ''} added to the gallery.`
@@ -1243,7 +1248,7 @@ const ComprehensiveAdmin: React.FC = () => {
         console.error('Failed to add gallery image', error);
       }
     },
-    [addGalleryImage, toast, uploadFileToS3]
+    [toast, uploadFileToS3]
   );
 
   const handleBackgroundFileDrop = useCallback(
@@ -1730,14 +1735,16 @@ const ComprehensiveAdmin: React.FC = () => {
             </div>
             <CardTitle className="text-2xl font-semibold">Barrydale Admin Access</CardTitle>
             <p className="text-sm text-slate-400">
-              Sign in with your Cognito admin account to manage gallery assets, section backgrounds, and site copy.
+              Sign in with your admin account to manage gallery assets, section backgrounds, and site copy.
             </p>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={handleAuthSubmit}>
               <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wide text-slate-400">Admin email</Label>
+                <Label htmlFor="admin-email" className="text-xs uppercase tracking-wide text-slate-400">Admin email</Label>
                 <Input
+                  id="admin-email"
+                  name="username"
                   type="email"
                   value={authUsername}
                   onChange={(event) => setAuthUsername(event.target.value)}
@@ -1748,8 +1755,10 @@ const ComprehensiveAdmin: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wide text-slate-400">Password</Label>
+                <Label htmlFor="admin-password" className="text-xs uppercase tracking-wide text-slate-400">Password</Label>
                 <Input
+                  id="admin-password"
+                  name="password"
                   type="password"
                   value={authPassword}
                   onChange={(event) => setAuthPassword(event.target.value)}
@@ -1777,8 +1786,6 @@ const ComprehensiveAdmin: React.FC = () => {
             </form>
           </CardContent>
         </Card>
-        <CognitoTest />
-        <CreateTestUser />
       </div>
     );
   }

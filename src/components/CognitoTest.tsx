@@ -1,37 +1,28 @@
 import React, { useState } from 'react';
+import { getCurrentUser } from 'aws-amplify/auth';
 
-// Simple test component to check Cognito connectivity
+// Simple test component to check Amplify Auth connectivity
 const CognitoTest: React.FC = () => {
   const [testResult, setTestResult] = useState<string>('');
 
-  const testCognitoConfig = async () => {
-    const userPoolId = process.env.REACT_APP_COGNITO_USER_POOL_ID;
-    const clientId = process.env.REACT_APP_COGNITO_CLIENT_ID;
-    
-    if (!userPoolId || !clientId) {
-      setTestResult('❌ Environment variables not set properly');
-      return;
-    }
-    
+  const testAmplifyAuth = async () => {
     try {
-      // Just test if we can create the user pool object
-      const { CognitoUserPool } = await import('amazon-cognito-identity-js');
-      const userPool = new CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId });
-      
-      if (userPool) {
-        setTestResult('✅ Cognito User Pool object created successfully');
+      // Test if Amplify Auth is configured properly
+      await getCurrentUser();
+      setTestResult('✅ Amplify Auth is configured and working');
+    } catch (error: any) {
+      if (error.name === 'UserUnAuthenticatedException') {
+        setTestResult('✅ Amplify Auth is configured (no user logged in)');
       } else {
-        setTestResult('❌ Failed to create User Pool object');
+        setTestResult(`❌ Amplify Auth error: ${error.message}`);
       }
-    } catch (error) {
-      setTestResult(`❌ Error creating User Pool: ${(error as Error).message}`);
     }
   };
 
   return (
     <div style={{ padding: '20px', margin: '20px', border: '1px solid #ccc', borderRadius: '5px' }}>
-      <h3>Cognito Configuration Test</h3>
-      <button onClick={testCognitoConfig} style={{ 
+      <h3>Amplify Auth Configuration Test</h3>
+      <button onClick={testAmplifyAuth} style={{ 
         padding: '10px 20px', 
         backgroundColor: '#007bff', 
         color: 'white', 
@@ -39,7 +30,7 @@ const CognitoTest: React.FC = () => {
         borderRadius: '3px',
         cursor: 'pointer'
       }}>
-        Test Cognito Config
+        Test Amplify Auth
       </button>
       {testResult && (
         <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '3px' }}>

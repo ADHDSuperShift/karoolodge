@@ -29,3 +29,8 @@ dist-ssr
 
 # Serverless deployment artifacts
 .serverless/
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*

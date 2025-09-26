@@ -1,11 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_COGNITO_USER_POOL_ID: string
-  readonly VITE_COGNITO_CLIENT_ID: string
-  readonly VITE_AUTH_ENDPOINT: string
-  readonly VITE_UPLOAD_ENDPOINT: string
-  readonly VITE_UPLOAD_API_KEY: string
+  // Environment variables will be added when new backend is implemented
+  readonly VITE_APP_TITLE?: string;
 }
 
 interface ImportMeta {

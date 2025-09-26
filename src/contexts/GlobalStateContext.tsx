@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { buildCdnUrl } from '@/utils/cdn';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import { buildCdnUrlSync } from '@/utils/cdn';
 
 // Define all the interfaces
 interface GalleryImage {
@@ -115,7 +115,7 @@ interface GlobalStateContextType extends GlobalState {
 }
 
 // Default state
-const cdn = (path: string) => buildCdnUrl(path);
+const cdn = (path: string) => buildCdnUrlSync(path);
 
 const defaultState: GlobalState = {
   galleryImages: [
@@ -676,12 +676,14 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
       return;
     }
 
-    const apiKey = import.meta.env.VITE_GALLERY_API_KEY as string | undefined;
+    // TODO: Implement new backend API call
+    console.log('Would fetch gallery from:', endpoint);
 
+    /* 
     fetch(endpoint, {
       mode: 'cors',
       headers: {
-        ...(apiKey ? { 'x-api-key': apiKey } : {})
+        // Add authentication headers when new backend is implemented
       }
     })
       .then(res => {
@@ -698,6 +700,7 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
       .catch(err => {
         console.error('Failed to fetch gallery images from backend', err);
       });
+    */
   }, []);
 
   // Gallery management functions

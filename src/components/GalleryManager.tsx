@@ -47,7 +47,7 @@ const GalleryManager: React.FC<GalleryManagerProps> = ({ images, onImagesUpdate 
       const newImage: GalleryImage = {
         id: Date.now(),
         src: formData.src,
-        category: formData.category as any,
+        category: formData.category as 'rooms' | 'dining' | 'bar' | 'wine' | 'scenery',
         title: formData.title,
         description: formData.description || ''
       };
@@ -121,7 +121,7 @@ const GalleryManager: React.FC<GalleryManagerProps> = ({ images, onImagesUpdate 
           {categories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setActiveCategory(category.id as any)}
+              onClick={() => setActiveCategory(category.id as 'rooms' | 'dining' | 'bar' | 'wine' | 'scenery' | 'all')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeCategory === category.id
                   ? 'bg-amber-600 text-white'
@@ -261,7 +261,7 @@ const GalleryManager: React.FC<GalleryManagerProps> = ({ images, onImagesUpdate 
                   </label>
                   <select
                     value={formData.category || 'rooms'}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as any }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as 'rooms' | 'dining' | 'bar' | 'wine' | 'scenery' }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     required
                   >

@@ -8,8 +8,8 @@ const SimpleAdminDashboard: React.FC = () => {
   
   // Simple local state for testing
   const [galleryImages, setGalleryImages] = useState([
-  { id: 1, src: "https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528577396_a70a7693.webp", category: 'rooms', title: 'Luxury Suite' },
-  { id: 2, src: "https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528579398_fe84a640.webp", category: 'rooms', title: 'Klein Karoo Cottage' }
+  { id: 1, src: "/placeholder.svg", category: 'rooms', title: 'Luxury Suite' },
+  { id: 2, src: "/placeholder.svg", category: 'rooms', title: 'Klein Karoo Cottage' }
   ]);
   
   const [newImage, setNewImage] = useState({ src: '', title: '', category: 'rooms' });

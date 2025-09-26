@@ -57,7 +57,7 @@ const WineCollectionManager: React.FC<WineCollectionManagerProps> = ({ wines, on
         price: formData.price,
         description: formData.description || '',
         image: formData.image,
-        category: formData.category as any,
+        category: formData.category as 'red' | 'white' | 'rosé' | 'sparkling' | 'dessert',
         origin: formData.origin || ''
       };
       console.log('WineCollectionManager: calling onWinesUpdate with new wine');
@@ -139,7 +139,7 @@ const WineCollectionManager: React.FC<WineCollectionManagerProps> = ({ wines, on
           {categories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setActiveCategory(category.id as any)}
+              onClick={() => setActiveCategory(category.id as 'red' | 'white' | 'rosé' | 'sparkling' | 'dessert' | 'all')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeCategory === category.id
                   ? 'bg-amber-600 text-white'
@@ -293,7 +293,7 @@ const WineCollectionManager: React.FC<WineCollectionManagerProps> = ({ wines, on
                     </label>
                     <select
                       value={formData.category || 'red'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as 'red' | 'white' | 'rosé' | 'sparkling' | 'dessert' }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                       required
                     >

@@ -18,10 +18,13 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          'cognito': ['amazon-cognito-identity-js']
+          // Removed AWS cognito chunk - no longer needed
         }
       }
-    }
+    },
+    // Help with build issues on different architectures
+    target: 'esnext',
+    minify: 'esbuild'
   },
   server: {
     host: "::",
@@ -29,11 +32,11 @@ export default defineConfig(({ mode }) => ({
     headers: {
       "Content-Security-Policy": [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        "connect-src 'self' https://cognito-idp.us-east-1.amazonaws.com https://*.amazonaws.com https://www.google.com https://maps.googleapis.com https://maps.gstatic.com http://localhost:4000 http://localhost:4001 https: http:",
-  "img-src 'self' data: https://*.amazonaws.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https://d3ieyce90rkgk7.cloudfront.net https://*.cloudfront.net https: http:",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cognito-idp.us-east-1.amazonaws.com",
+        "connect-src 'self' https://cognito-idp.us-east-1.amazonaws.com https://cognito-identity.us-east-1.amazonaws.com https://*.appsync-api.us-east-1.amazonaws.com https://*.amazonaws.com https://www.google.com https://maps.googleapis.com https://maps.gstatic.com http://localhost:4000 http://localhost:4001 https: http: ws: wss:",
+        "img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https: http: blob:",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
         "frame-src 'self' https://www.google.com https://maps.google.com"
       ].join('; ')
     }

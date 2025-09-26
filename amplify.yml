@@ -1,36 +1,31 @@
 version: 1
-applications:
-  - frontend:
-      phases:
-        preBuild:
-          commands:
-            - npm ci
-            - echo "Creating .env file with build variables..."
-            - echo "VITE_AUTH_ENDPOINT=https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev" > .env
-            - echo "VITE_UPLOAD_ENDPOINT=https://maqo72gd3h.execute-api.us-east-1.amazonaws.com/dev/api" >> .env
-            - echo "VITE_UPLOAD_API_KEY=79dc174817e715e1f30906b9f4d09be74d0323d8bf387962c95f728762e60159" >> .env
-            - echo "VITE_COGNITO_USER_POOL_ID=us-east-1_fzogF46tc" >> .env
-            - echo "VITE_COGNITO_CLIENT_ID=3d3cij4c87drjkuko3np8lmn1d" >> .env
-            - echo "Environment file created:"
-            - cat .env
-        build:
-          commands:
-            - npm run build
-            - cp public/_redirects dist/_redirects
-            - echo "Redirects file copied to dist directory"
-            - ls -la dist/_redirects
-      artifacts:
-        baseDirectory: dist
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-    appRoot: ./
-    customHeaders:
-      - pattern: '**/*'
-        headers:
-          - key: 'Strict-Transport-Security'
-            value: 'max-age=31536000; includeSubDomains'
-          - key: 'X-Frame-Options'
-            value: 'SAMEORIGIN'
+frontend:
+  phases:
+    preBuild:
+      commands:
+  - echo "Cleaning up to fix Rollup native dependencies issue"
+  - echo "Switching to Node 20 LTS to avoid npm optional deps bug"
+  - nvm install 20 || true
+  - nvm use 20 || true
+  - node -v && npm -v
+  - npm config set optional true
+  - npm config set prefer-offline false
+  - npm cache clean --force || true
+  - rm -rf ~/.npm || true
+  - rm -rf node_modules package-lock.json
+  - export NPM_CONFIG_OPTIONAL=true
+  - npm install
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+  paths: []
+customHeaders:
+  - pattern: '**'
+    headers:
+      - key: 'Content-Security-Policy'
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.amazonaws.com; connect-src 'self' https://*.amazonaws.com https: http: ws: wss:; img-src 'self' data: https: http: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src 'self'"

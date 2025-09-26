@@ -51,7 +51,7 @@ const BarEventsSection: React.FC = () => {
           {/* Image */}
           <div className="relative">
             <img
-              src={barEventsBackground?.imageUrl || "https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp"}
+              src={barEventsBackground?.imageUrl || "/placeholder.svg"}
               alt="Windpomp Bar"
               className="w-full h-96 object-cover rounded-xl"
             />

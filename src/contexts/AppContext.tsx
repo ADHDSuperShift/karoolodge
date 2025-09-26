@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
-import { buildCdnUrl } from '@/utils/cdn';
+import { buildCdnUrlSync } from '@/utils/cdn';
 
 interface GalleryImage {
   id: number;
@@ -54,7 +54,7 @@ export const useAppContext = () => useContext(AppContext);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const cdn = (key: string) => buildCdnUrl(key);
+  const cdn = (key: string) => buildCdnUrlSync(key);
 
   // Default data - in a real app, this would come from your backend/admin system
   const [galleryImages] = useState<GalleryImage[]>([

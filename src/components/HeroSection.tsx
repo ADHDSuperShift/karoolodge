@@ -17,7 +17,7 @@ const HeroSection: React.FC = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('${heroBackground?.imageUrl || 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp'}')`
+          backgroundImage: `url('${heroBackground?.imageUrl || '/placeholder.svg'}')`
         }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>

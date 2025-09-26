@@ -25,10 +25,10 @@ const DragDropAdmin = () => {
   
   // Background state
   const [backgrounds, setBackgrounds] = useState<BackgroundItem[]>([
-  { section: 'hero', url: 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp', label: 'Hero Section' },
-  { section: 'restaurant', url: 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp', label: 'Restaurant Section' },
-  { section: 'wine', url: 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp', label: 'Wine Section' },
-  { section: 'bar', url: 'https://d3ieyce90rkgk7.cloudfront.net/68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp', label: 'Bar Section' }
+  { section: 'hero', url: '/placeholder.svg', label: 'Hero Section' },
+  { section: 'restaurant', url: '/placeholder.svg', label: 'Restaurant Section' },
+  { section: 'wine', url: '/placeholder.svg', label: 'Wine Section' },
+  { section: 'bar', url: '/placeholder.svg', label: 'Bar Section' }
   ]);
   
   // File drop refs

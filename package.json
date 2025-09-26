@@ -71,7 +71,11 @@
     "vaul": "^0.9.3",
     "zod": "^3.23.8"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.20.0"
+  },
   "devDependencies": {
+  "rollup": "^4.20.0",
     "@aws-amplify/backend": "^1.16.1",
     "@aws-amplify/backend-cli": "^1.8.0",
     "@eslint/js": "^9.9.0",
