@@ -1,22 +1,21 @@
 
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { Amplify } from 'aws-amplify';
-import amplifyConfig from './amplifyconfiguration';
-import App from './App.tsx';
-import { AuthProvider } from './contexts/AuthContext.tsx';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { AuthProvider } from './contexts/AuthContext';
 import './index.css';
 
-Amplify.configure(amplifyConfig);
+// ✅ Amplify v6+ import
+import { Amplify } from "aws-amplify";
+import amplifyconfig from "./amplifyconfiguration.json";
 
-const root = createRoot(document.getElementById('root')!);
+// ✅ Configure Amplify
+Amplify.configure(amplifyconfig);
 
-root.render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AuthProvider>
       <App />
     </AuthProvider>
   </React.StrictMode>
 );
-
-// Cache bust: Thu Sep 25 10:24:16 SAST 2025
