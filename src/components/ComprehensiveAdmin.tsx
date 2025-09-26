@@ -985,8 +985,11 @@ const ComprehensiveAdmin: React.FC = () => {
         }).result;
 
         // Build a stable, publicly addressable URL (requires bucket policy allowing public read)
-        const bucket = amplifyConfig.Storage?.S3?.bucket as string;
-        const region = amplifyConfig.Storage?.S3?.region as string;
+        const bucket = amplifyConfig.Storage?.S3?.bucket || 'barrydalekaroo185607-dev';
+        const region = amplifyConfig.Storage?.S3?.region || 'us-east-1';
+        console.log('Debug - amplifyConfig.Storage:', amplifyConfig.Storage);
+        console.log('Debug - bucket:', bucket, 'region:', region);
+        
         const resolvedKey = (uploadOutput as any)?.path || `public/${key}`; // Ensure public/ prefix
         const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/${resolvedKey}`;
         console.log('S3 object public URL:', publicUrl);
