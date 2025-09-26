@@ -888,16 +888,15 @@ const ComprehensiveAdmin: React.FC = () => {
           throw new Error('Missing upload credentials. Please sign in again.');
         }
 
-        // Generate unique filename BEFORE making API request
-        const timestamp = Date.now();
-        // Better filename sanitization that preserves file extensions
+        // Sanitize filename – backend will add timestamp to ensure uniqueness
         const nameParts = file.name.split('.');
         const extension = nameParts.pop() || '';
-        const baseName = nameParts.join('.').replace(/[^a-zA-Z0-9._-]/g, '_');
-        const uniqueFilename = `${timestamp}_${baseName}.${extension}`;
+        const baseNameRaw = nameParts.join('.') || 'upload';
+        const sanitizedBase = baseNameRaw.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const sanitizedFilename = extension ? `${sanitizedBase}.${extension}` : sanitizedBase;
 
         console.log('Original filename:', file.name);
-        console.log('Generated unique filename:', uniqueFilename);
+        console.log('Sanitized filename:', sanitizedFilename);
 
         const response = await fetch(uploadEndpoint, {
           method: 'POST',
@@ -906,7 +905,7 @@ const ComprehensiveAdmin: React.FC = () => {
             'x-api-key': apiKey
           },
           body: JSON.stringify({
-            filename: uniqueFilename, // Use the unique filename consistently
+            filename: sanitizedFilename,
             contentType: file.type,
             folder
           })
@@ -916,9 +915,9 @@ const ComprehensiveAdmin: React.FC = () => {
           throw new Error('Failed to request upload URL');
         }
 
-        const { uploadURL: uploadUrl, fileUrl: fileUrlFromApi } = await response.json();
+        const { uploadURL: uploadUrl, fileUrl: fileUrlFromApi, key } = await response.json();
 
-        console.log('📤 Uploading:', uniqueFilename, 'to folder:', folder);
+        console.log('📤 Uploading:', sanitizedFilename, 'to folder:', folder);
 
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
@@ -935,27 +934,33 @@ const ComprehensiveAdmin: React.FC = () => {
         }
 
         console.log('✅ Upload successful!');
+        if (key) {
+          console.log('🆔 S3 object key:', key);
+        }
 
         const s3Base = (fileUrlFromApi && typeof fileUrlFromApi === 'string' && fileUrlFromApi.length
           ? fileUrlFromApi.replace(/^(https?:\/\/[^/]+).*/, '$1')
           : uploadUrl.replace(/^(https?:\/\/[^/]+).*/, '$1')) || 'https://barrydale-media.s3.eu-west-1.amazonaws.com';
 
-        const normalizedFolder = (folder ?? '')
-          .split('/')
-          .map(segment => segment.trim())
-          .filter(Boolean)
-          .join('/');
-
-        const computedS3Url =
-          fileUrlFromApi && typeof fileUrlFromApi === 'string' && fileUrlFromApi.length
-            ? fileUrlFromApi
-            : `${s3Base}/${normalizedFolder ? `${normalizedFolder}/` : ''}${uniqueFilename}`;
-
         const cdnBaseRaw = import.meta.env.VITE_CLOUDFRONT_URL;
         const cdnBase = cdnBaseRaw && cdnBaseRaw.length ? cdnBaseRaw.replace(/\/$/, '') : '';
 
-        const finalUrl = (cdnBase ? computedS3Url.replace(/^https?:\/\/[^/]+/, cdnBase) : computedS3Url) ||
-          `${s3Base}/${normalizedFolder ? `${normalizedFolder}/` : ''}${uniqueFilename}`;
+        const finalKey = (key && typeof key === 'string' && key.length)
+          ? key
+          : (() => {
+              const normalizedFolder = (folder ?? '')
+                .split('/')
+                .map(segment => segment.trim())
+                .filter(Boolean)
+                .join('/');
+              return `${normalizedFolder ? `${normalizedFolder}/` : ''}${sanitizedFilename}`;
+            })();
+
+        const finalUrlCandidate = `${s3Base}/${finalKey}`;
+
+        const finalUrl = fileUrlFromApi && typeof fileUrlFromApi === 'string' && fileUrlFromApi.length
+          ? fileUrlFromApi
+          : (cdnBase ? `${cdnBase}/${finalKey}` : finalUrlCandidate);
 
         console.log('🌐 Final media URL:', finalUrl);
 

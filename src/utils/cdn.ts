@@ -1,4 +1,4 @@
-const DEFAULT_CDN = import.meta.env.VITE_CLOUDFRONT_URL?.replace(/\/$/, '') ?? 'https://d64gsuwffb70l.cloudfront.net';
+const DEFAULT_CDN = import.meta.env.VITE_CLOUDFRONT_URL?.replace(/\/$/, '') ?? 'https://d3ieyce90rkgk7.cloudfront.net';
 
 export const getCdnBase = () => DEFAULT_CDN;
 

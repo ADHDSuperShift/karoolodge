@@ -1,8 +1,11 @@
 import React from 'react';
-import AdminDashboard from '../components/AdminDashboard';
+import AdminGallery from '../components/AdminGallery';
 
-const Admin: React.FC = () => {
-  return <AdminDashboard />;
-};
-
-export default Admin;
+export default function Admin() {
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Admin Console</h1>
+      <AdminGallery />
+    </div>
+  );
+}

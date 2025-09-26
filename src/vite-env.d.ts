@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_COGNITO_CLIENT_ID: string
   readonly VITE_AUTH_ENDPOINT: string
   readonly VITE_UPLOAD_ENDPOINT: string
+  readonly VITE_UPLOAD_API_KEY: string
 }
 
 interface ImportMeta {
