@@ -131,6 +131,16 @@ const fixUrlProtocol = (url: string): string => {
   if (url.startsWith('data:')) return url;
   if (url.startsWith('/')) return url; // relative URLs are OK
   
+  // Fix broken URLs that contain undefined values
+  if (url.includes('undefined.s3.undefined.amazonaws.com')) {
+    // Extract the path part after the broken domain
+    const pathMatch = url.match(/undefined\.s3\.undefined\.amazonaws\.com\/(.+)$/);
+    if (pathMatch) {
+      const path = pathMatch[1];
+      return `https://barrydalekaroo185607-dev.s3.us-east-1.amazonaws.com/${path}`;
+    }
+  }
+  
   // If it looks like an S3 key/path without protocol, add the S3 URL
   if (url.includes('.amazonaws.com') && !url.startsWith('http')) {
     return `https://${url}`;
