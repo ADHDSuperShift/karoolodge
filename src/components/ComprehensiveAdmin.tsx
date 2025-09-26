@@ -971,25 +971,37 @@ const ComprehensiveAdmin: React.FC = () => {
           throw new Error('Image must be smaller than 5MB');
         }
         
-        // Upload to S3
+        // Upload to S3 with fallback to base64
         const uploadFileToS3 = async (file: File, folder: string) => {
-          const key = `${folder}/${Date.now()}-${file.name}`;
-          
-          // Upload the file
-          await uploadData({
-            key: key,
-            data: file,
-            options: {
-              contentType: file.type
-            }
-          }).result;
-          
-          // Get the URL
-          const url = await getUrl({
-            key: key
-          });
-          
-          return url.url.toString();
+          try {
+            const key = `${folder}/${Date.now()}-${file.name}`;
+            
+            // Try S3 upload first
+            await uploadData({
+              key: key,
+              data: file,
+              options: {
+                contentType: file.type
+              }
+            }).result;
+            
+            // Get the URL
+            const url = await getUrl({
+              key: key
+            });
+            
+            return url.url.toString();
+          } catch (error) {
+            console.warn('S3 upload failed, falling back to base64:', error);
+            
+            // Fallback to base64 conversion
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(new Error('Failed to read file'));
+              reader.readAsDataURL(file);
+            });
+          }
         };
         
         const uploadedUrl = await uploadFileToS3(file, folder);
@@ -1011,12 +1023,14 @@ const ComprehensiveAdmin: React.FC = () => {
         // Simulate upload delay for better UX
         await new Promise(resolve => setTimeout(resolve, 800));
         
+        const isBase64 = uploadedUrl.startsWith('data:');
+        
         toast({
           title: 'Upload successful',
-          description: `${file.name} has been uploaded successfully`,
+          description: `${file.name} has been uploaded ${isBase64 ? 'locally (base64)' : 'to cloud storage'}`,
         });
 
-        return uploadedUrl; // Return the S3 URL for immediate use
+        return uploadedUrl; // Return the URL for immediate use
       } catch (error) {
         console.error('Upload failed:', error);
         toast({
