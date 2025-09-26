@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
-import { buildCdnUrlSync } from '@/utils/cdn';
 
 // Define all the interfaces
 interface GalleryImage {
@@ -114,84 +113,102 @@ interface GlobalStateContextType extends GlobalState {
   updateLogo: (logoUrl: string) => void;
 }
 
-// Default state
-const cdn = (path: string) => buildCdnUrlSync(path);
+// Utility function to create local placeholder images
+const createPlaceholderSvg = (width: number, height: number, color: string, textColor: string, text: string): string => {
+  const svg = `
+    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#${color}"/>
+      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" fill="#${textColor}" text-anchor="middle" dominant-baseline="middle">${text}</text>
+    </svg>
+  `;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
 
+// Utility function to ensure URLs have proper protocol
+const fixUrlProtocol = (url: string): string => {
+  if (!url) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('data:')) return url;
+  if (url.startsWith('/')) return url; // relative URLs are OK
+  return url;
+};
+
+// Default state with proper URL protocols
 const defaultState: GlobalState = {
   galleryImages: [
-    { id: 1, src: cdn('68d104194c27c84c671a33c8_1758528577396_a70a7693.webp'), category: 'rooms', title: 'Luxury Suite' },
-    { id: 2, src: cdn('68d104194c27c84c671a33c8_1758528579398_fe84a640.webp'), category: 'rooms', title: 'Klein Karoo Cottage' },
-    { id: 3, src: cdn('68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp'), category: 'dining', title: 'Vintage Car Restaurant' },
-    { id: 4, src: cdn('68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp'), category: 'bar', title: 'Windpomp Bar' },
-    { id: 5, src: cdn('68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp'), category: 'wine', title: 'Wine Boutique' },
-    { id: 6, src: cdn('68d104194c27c84c671a33c8_1758528809003_d680fef6.webp'), category: 'scenery', title: 'Klein Karoo Landscape' },
-    { id: 7, src: cdn('68d104194c27c84c671a33c8_1758528810823_190418d4.webp'), category: 'scenery', title: 'Mountain Views' },
-    { id: 8, src: cdn('68d104194c27c84c671a33c8_1758528813169_24c3c65c.webp'), category: 'scenery', title: 'Sunset Vista' }
+    { id: 1, src: createPlaceholderSvg(800, 600, '8B4513', 'FFF', 'Luxury Suite'), category: 'rooms', title: 'Luxury Suite' },
+    { id: 2, src: createPlaceholderSvg(800, 600, 'D2691E', 'FFF', 'Klein Karoo Cottage'), category: 'rooms', title: 'Klein Karoo Cottage' },
+    { id: 3, src: createPlaceholderSvg(800, 600, 'CD853F', 'FFF', 'Vintage Restaurant'), category: 'dining', title: 'Vintage Car Restaurant' },
+    { id: 4, src: createPlaceholderSvg(800, 600, 'DEB887', 'FFF', 'Windpomp Bar'), category: 'bar', title: 'Windpomp Bar' },
+    { id: 5, src: createPlaceholderSvg(800, 600, 'F4A460', 'FFF', 'Wine Boutique'), category: 'wine', title: 'Wine Boutique' },
+    { id: 6, src: createPlaceholderSvg(800, 600, 'DAA520', 'FFF', 'Karoo Landscape'), category: 'scenery', title: 'Klein Karoo Landscape' },
+    { id: 7, src: createPlaceholderSvg(800, 600, 'B8860B', 'FFF', 'Mountain Views'), category: 'scenery', title: 'Mountain Views' },
+    { id: 8, src: createPlaceholderSvg(800, 600, 'A0522D', 'FFF', 'Sunset Vista'), category: 'scenery', title: 'Sunset Vista' }
   ],
   sectionBackgrounds: [
     {
       section: 'hero',
-      imageUrl: cdn('68d104194c27c84c671a33c8_1758528576432_f0fe5cce.webp'),
+      imageUrl: createPlaceholderSvg(1200, 600, '8B4513', 'FFF', 'Hero Background'),
       title: 'Hero Background',
-      description: 'Main hero section background showcasing Klein Karoo beauty'
+      description: 'Main hero section background image'
     },
     {
       section: 'restaurant',
-      imageUrl: cdn('68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp'),
+      imageUrl: createPlaceholderSvg(1200, 600, 'D2691E', 'FFF', 'Restaurant Background'),
       title: 'Restaurant Background',
-      description: 'Vintage car restaurant atmosphere'
+      description: 'Restaurant section background image'
     },
     {
       section: 'wine-boutique',
-      imageUrl: cdn('68d104194c27c84c671a33c8_1758528591318_fc7cb320.webp'),
+      imageUrl: createPlaceholderSvg(1200, 600, 'CD853F', 'FFF', 'Wine Boutique'),
       title: 'Wine Boutique Background',
-      description: 'Wine cellar and boutique ambiance'
+      description: 'Wine boutique section background image'
     },
     {
       section: 'bar-events',
-      imageUrl: cdn('68d104194c27c84c671a33c8_1758528602433_419a9c1d.webp'),
-      title: 'Bar & Events Background',
-      description: 'Windpomp bar and event space'
+      imageUrl: createPlaceholderSvg(1200, 600, 'DEB887', 'FFF', 'Bar Events'),
+      title: 'Bar Events Background',
+      description: 'Bar and events section background image'
     }
   ],
   wineCollection: [
     {
       id: 1,
-      name: "Klein Karoo Reserve Cabernet",
+      name: "Klein Karoo Cabernet Sauvignon",
       vintage: "2020",
-      price: "R450",
-      description: "Full-bodied red wine with rich tannins and notes of blackcurrant and oak",
-      image: cdn('68d104194c27c84c671a33c8_1758528592120_cf63c543.webp'),
+      price: "R245",
+      description: "Full-bodied red wine with rich tannins and notes of blackcurrant, cedar, and vanilla. Aged in French oak barrels for 18 months.",
+      image: createPlaceholderSvg(400, 600, '722F37', 'FFF', 'Cabernet'),
       category: 'red',
       origin: "Klein Karoo, South Africa"
     },
     {
       id: 2,
-      name: "Route 62 Chardonnay",
-      vintage: "2022",
-      price: "R320",
-      description: "Crisp white wine with citrus notes and a mineral finish",
-      image: cdn('68d104194c27c84c671a33c8_1758528593828_73d944fd.webp'),
+      name: "Barrydale Chardonnay",
+      vintage: "2021",
+      price: "R180",
+      description: "Crisp and elegant white wine with citrus notes, balanced acidity, and hints of oak. Perfect with seafood and poultry.",
+      image: createPlaceholderSvg(400, 600, 'F7E7CE', '333', 'Chardonnay'),
       category: 'white',
-      origin: "Western Cape, South Africa"
+      origin: "Barrydale, South Africa"
     },
     {
       id: 3,
-      name: "Barrydale Blush",
-      vintage: "2023",
-      price: "R290",
-      description: "Light and refreshing rosé with strawberry and peach flavors",
-      image: cdn('68d104194c27c84c671a33c8_1758528595529_41ddb688.webp'),
+      name: "Route 62 Rosé",
+      vintage: "2022",
+      price: "R150",
+      description: "Light and refreshing rosé with delicate strawberry flavors and a crisp finish. Ideal for summer evenings.",
+      image: createPlaceholderSvg(400, 600, 'E8B4B8', 'FFF', 'Rosé'),
       category: 'rosé',
-      origin: "Barrydale, Western Cape"
+      origin: "Route 62, South Africa"
     },
     {
       id: 4,
-      name: "Karoo Sparkle",
+      name: "Karoo Sparkling Wine",
       vintage: "2021",
-      price: "R480",
-      description: "Elegant sparkling wine perfect for celebrations",
-      image: cdn('68d104194c27c84c671a33c8_1758528598192_5cfeb00f.webp'),
+      price: "R220",
+      description: "Traditional method sparkling wine with fine bubbles, citrus notes, and a long elegant finish.",
+      image: createPlaceholderSvg(400, 600, 'F0E68C', '333', 'Sparkling'),
       category: 'sparkling',
       origin: "Robertson Valley, South Africa"
     }
@@ -202,9 +219,9 @@ const defaultState: GlobalState = {
       name: "Aloe Ferox",
       category: "Standard Twin Room",
       images: [
-        cdn('68d104194c27c84c671a33c8_1758528577396_a70a7693.webp'),
-        cdn('68d104194c27c84c671a33c8_1758528579398_fe84a640.webp'),
-        cdn('68d104194c27c84c671a33c8_1758528584345_d1dfcb47.webp')
+        createPlaceholderSvg(800, 600, '8B4513', 'FFF', 'Aloe Ferox 1'),
+        createPlaceholderSvg(800, 600, 'D2691E', 'FFF', 'Aloe Ferox 2'),
+        createPlaceholderSvg(800, 600, 'CD853F', 'FFF', 'Aloe Ferox 3')
       ],
       price: "R1,200",
       guests: 2,
@@ -236,9 +253,9 @@ const defaultState: GlobalState = {
       name: "Agapanthus",
       category: "Standard Twin Room (Accessible)",
       images: [
-        cdn('68d104194c27c84c671a33c8_1758528809003_d680fef6.webp'),
-        cdn('68d104194c27c84c671a33c8_1758528810823_190418d4.webp'),
-        cdn('68d104194c27c84c671a33c8_1758528813169_24c3c65c.webp')
+        createPlaceholderSvg(800, 600, 'DEB887', 'FFF', 'Accessible Room 1'),
+        createPlaceholderSvg(800, 600, 'F4A460', 'FFF', 'Accessible Room 2'),
+        createPlaceholderSvg(800, 600, 'DAA520', 'FFF', 'Accessible Room 3')
       ],
       price: "R1,200",
       guests: 2,
@@ -273,9 +290,9 @@ const defaultState: GlobalState = {
       name: "Botterboom",
       category: "Standard Twin Room (Accessible)",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        createPlaceholderSvg(800, 600, '8B7355', 'FFF', 'Botterboom 1'),
+        createPlaceholderSvg(800, 600, 'A0522D', 'FFF', 'Botterboom 2'),
+        createPlaceholderSvg(800, 600, 'CD853F', 'FFF', 'Botterboom 3')
       ],
       price: "R1,200",
       guests: 2,
@@ -310,9 +327,9 @@ const defaultState: GlobalState = {
       name: "Geelkatstert",
       category: "Luxury King Room (Accessible)",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        createPlaceholderSvg(800, 600, 'DAA520', 'FFF', 'Geelkatstert 1'),
+        createPlaceholderSvg(800, 600, 'B8860B', 'FFF', 'Geelkatstert 2'),
+        createPlaceholderSvg(800, 600, 'F4A460', 'FFF', 'Geelkatstert 3')
       ],
       price: "R1,800",
       guests: 2,
@@ -348,9 +365,9 @@ const defaultState: GlobalState = {
       name: "Vygie",
       category: "Luxury King Room",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        createPlaceholderSvg(800, 600, 'DDA0DD', 'FFF', 'Vygie 1'),
+        createPlaceholderSvg(800, 600, 'D8BFD8', 'FFF', 'Vygie 2'),
+        createPlaceholderSvg(800, 600, 'E6E6FA', '333', 'Vygie 3')
       ],
       price: "R1,800",
       guests: 2,
@@ -385,9 +402,9 @@ const defaultState: GlobalState = {
       name: "Gousblom",
       category: "Superior King Room",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        createPlaceholderSvg(800, 600, 'FFD700', '333', 'Gousblom 1'),
+        createPlaceholderSvg(800, 600, 'FFA500', 'FFF', 'Gousblom 2'),
+        createPlaceholderSvg(800, 600, 'FF8C00', 'FFF', 'Gousblom 3')
       ],
       price: "R2,000",
       guests: 2,
@@ -423,9 +440,9 @@ const defaultState: GlobalState = {
       name: "Buchu",
       category: "Superior King Room",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        createPlaceholderSvg(800, 600, '90EE90', '333', 'Buchu 1'),
+        createPlaceholderSvg(800, 600, '98FB98', '333', 'Buchu 2'),
+        createPlaceholderSvg(800, 600, '00FF7F', 'FFF', 'Buchu 3')
       ],
       price: "R2,000",
       guests: 2,
@@ -461,9 +478,9 @@ const defaultState: GlobalState = {
       name: "Arum Lily",
       category: "Superior King Room",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        createPlaceholderSvg(800, 600, 'FFF8DC', '333', 'Arum Lily 1'),
+        createPlaceholderSvg(800, 600, 'F0F8FF', '333', 'Arum Lily 2'),
+        createPlaceholderSvg(800, 600, 'F5F5DC', '333', 'Arum Lily 3')
       ],
       price: "R2,200",
       guests: 2,
@@ -499,9 +516,9 @@ const defaultState: GlobalState = {
       name: "Protea",
       category: "Superior King Room",
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        createPlaceholderSvg(800, 600, 'DC143C', 'FFF', 'Protea 1'),
+        createPlaceholderSvg(800, 600, 'B22222', 'FFF', 'Protea 2'),
+        createPlaceholderSvg(800, 600, 'CD5C5C', 'FFF', 'Protea 3')
       ],
       price: "R2,200",
       guests: 2,
@@ -624,7 +641,7 @@ export const GlobalStateProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const normalizeRoom = (room: Room, index: number): Room => ({
     ...room,
     id: room.id ?? index + 1,
-    images: room.images && room.images.length ? room.images : ['/placeholder.svg'],
+    images: room.images && room.images.length ? room.images : [createPlaceholderSvg(800, 600, '8B4513', 'FFF', `Room ${index + 1}`)],
     amenities: room.amenities ?? [],
     features: room.features ?? [],
     description: room.description ?? '',
@@ -639,17 +656,46 @@ export const GlobalStateProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
 const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
+    // Load saved gallery from localStorage
+    let savedGallery = null;
+    try {
+      const savedGalleryJson = localStorage.getItem('karoo-gallery-state');
+      if (savedGalleryJson) {
+        savedGallery = JSON.parse(savedGalleryJson);
+        console.log(`Loaded ${savedGallery.length} gallery images from localStorage`);
+      }
+    } catch (error) {
+      console.error('Failed to load gallery from localStorage:', error);
+    }
+
+    // Get base gallery images
+    const baseGallery = savedGallery || (saved?.galleryImages && saved.galleryImages.length 
+      ? saved.galleryImages 
+      : defaultState.galleryImages);
 
     return {
-      galleryImages:
-        saved?.galleryImages && saved.galleryImages.length ? saved.galleryImages : defaultState.galleryImages,
+      galleryImages: baseGallery.map(img => ({
+        ...img,
+        src: fixUrlProtocol(img.src)
+      })),
       sectionBackgrounds:
         saved?.sectionBackgrounds && saved.sectionBackgrounds.length
-          ? saved.sectionBackgrounds
+          ? saved.sectionBackgrounds.map(bg => ({
+              ...bg,
+              imageUrl: fixUrlProtocol(bg.imageUrl)
+            }))
           : defaultState.sectionBackgrounds,
       wineCollection:
-        saved?.wineCollection && saved.wineCollection.length ? saved.wineCollection : defaultState.wineCollection,
-      rooms: ensureRooms(saved?.rooms),
+        saved?.wineCollection && saved.wineCollection.length 
+          ? saved.wineCollection.map(wine => ({
+              ...wine,
+              image: fixUrlProtocol(wine.image)
+            }))
+          : defaultState.wineCollection,
+      rooms: ensureRooms(saved?.rooms).map(room => ({
+        ...room,
+        images: room.images.map(fixUrlProtocol)
+      })),
       events: saved?.events && saved.events.length ? saved.events : defaultState.events,
       siteContent: {
         ...defaultState.siteContent,
@@ -666,7 +712,24 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
     };
   };
 
-  const [state, setState] = useState<GlobalState>(defaultState);
+  const [state, setState] = useState<GlobalState>(() => {
+    const initialState = hydrateState(null);
+    console.log('GlobalStateContext: Initial state loaded with', initialState.galleryImages.length, 'gallery images');
+    
+    // Debug URL formats
+    const badUrls = [
+      ...initialState.galleryImages,
+      ...initialState.sectionBackgrounds.map(bg => ({ src: bg.imageUrl, title: bg.title })),
+      ...initialState.wineCollection.map(wine => ({ src: wine.image, title: wine.name })),
+      ...initialState.rooms.flatMap(room => room.images.map((img, idx) => ({ src: img, title: `${room.name} ${idx + 1}` })))
+    ].filter(item => item.src && !item.src.startsWith('http'));
+    
+    if (badUrls.length > 0) {
+      console.warn('Found URLs without protocol:', badUrls);
+    }
+    
+    return initialState;
+  });
   // Hydrate gallery from backend only when an endpoint is configured
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -707,10 +770,33 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
   const updateGalleryImages = (images: GalleryImage[]) => {
     console.log('GlobalState: updateGalleryImages called with', images.length, 'images');
     setState(prev => ({ ...prev, galleryImages: images }));
+    
+    // Save gallery to localStorage
+    try {
+      localStorage.setItem('karoo-gallery-state', JSON.stringify(images));
+    } catch (error) {
+      console.error('Failed to save gallery to localStorage:', error);
+    }
   };
 
   const addGalleryImage = (image: GalleryImage) => {
-    setState(prev => ({ ...prev, galleryImages: [...prev.galleryImages, image] }));
+    const fixedImage = {
+      ...image,
+      src: fixUrlProtocol(image.src)
+    };
+    
+    setState(prev => {
+      const newGallery = [...prev.galleryImages, fixedImage];
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('karoo-gallery-state', JSON.stringify(newGallery));
+      } catch (error) {
+        console.error('Failed to save gallery to localStorage:', error);
+      }
+      
+      return { ...prev, galleryImages: newGallery };
+    });
   };
 
   const updateGalleryImage = (image: GalleryImage) => {
@@ -734,10 +820,15 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
   };
 
   const updateSectionBackground = (background: SectionBackground) => {
+    const fixedBackground = {
+      ...background,
+      imageUrl: fixUrlProtocol(background.imageUrl)
+    };
+    
     setState(prev => ({
       ...prev,
       sectionBackgrounds: prev.sectionBackgrounds.map(bg => 
-        bg.section === background.section ? background : bg
+        bg.section === fixedBackground.section ? fixedBackground : bg
       )
     }));
   };

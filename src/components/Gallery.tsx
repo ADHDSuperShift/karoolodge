@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { API_KEY, IS_API_KEY_CONFIGURED, LIST_IMAGES_ENDPOINT } from '@/utils/apiConfig';
+
+// Mock configuration for frontend-only mode
+const IS_API_KEY_CONFIGURED = false;
 
 interface GalleryItem {
   id: string;
@@ -13,20 +15,31 @@ export default function Gallery() {
 
   useEffect(() => {
     async function fetchImages() {
-      if (!IS_API_KEY_CONFIGURED) {
-        console.error('Missing VITE_UPLOAD_API_KEY; cannot fetch gallery images.');
-        return;
-      }
-
-      const res = await fetch(LIST_IMAGES_ENDPOINT, {
-        headers: { 'x-api-key': API_KEY },
-      });
-      if (!res.ok) {
-        console.error('Failed to fetch images', res.status, res.statusText);
-        return;
-      }
-      const data = await res.json();
-      setImages(data);
+      console.log('Frontend-only mode: Loading mock gallery images');
+      
+      // Mock gallery data
+      const mockImages: GalleryItem[] = [
+        {
+          id: '1',
+          url: '/placeholder.svg',
+          folder: 'gallery',
+          uploadedAt: Date.now() - 86400000 // 1 day ago
+        },
+        {
+          id: '2',
+          url: '/placeholder.svg',
+          folder: 'gallery',
+          uploadedAt: Date.now() - 172800000 // 2 days ago
+        },
+        {
+          id: '3',
+          url: '/placeholder.svg',
+          folder: 'gallery',
+          uploadedAt: Date.now() - 259200000 // 3 days ago
+        }
+      ];
+      
+      setImages(mockImages);
     }
 
     fetchImages();

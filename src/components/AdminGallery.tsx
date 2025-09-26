@@ -1,12 +1,7 @@
 import React, { useEffect, useState, ChangeEvent } from 'react';
-import {
-  API_BASE,
-  API_KEY,
-  IS_API_KEY_CONFIGURED,
-  LIST_IMAGES_ENDPOINT,
-  SAVE_IMAGE_ENDPOINT,
-  UPLOAD_URL_ENDPOINT
-} from '@/utils/apiConfig';
+
+// Mock configuration for frontend-only mode
+const IS_API_KEY_CONFIGURED = false;
 
 type MediaItem = {
   id?: string;
@@ -21,29 +16,32 @@ export default function AdminGallery() {
 
   useEffect(() => {
     const loadImages = async () => {
-      if (!IS_API_KEY_CONFIGURED) {
-        console.error('Missing VITE_UPLOAD_API_KEY; cannot fetch admin gallery.');
-        return;
-      }
+      console.log('Loading images from localStorage');
+      
       try {
-        const response = await fetch(LIST_IMAGES_ENDPOINT, {
-          headers: { 'x-api-key': API_KEY },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to load images: ${response.status}`);
-        }
-
-        const data = (await response.json()) as MediaItem[];
-        if (Array.isArray(data)) {
-          setImages(
-            data
-              .map((item) => item.url || item.fileUrl)
-              .filter((url): url is string => typeof url === 'string' && url.length > 0)
-          );
+        // Load uploaded images from localStorage
+        const uploadedImagesJson = localStorage.getItem('uploadedImages');
+        if (uploadedImagesJson) {
+          const uploadedImages = JSON.parse(uploadedImagesJson);
+          const galleryImages = uploadedImages
+            .filter((upload: any) => upload.folder === 'gallery')
+            .map((upload: any) => upload.base64);
+          
+          setImages(galleryImages);
+          console.log(`Loaded ${galleryImages.length} uploaded images`);
+        } else {
+          // Show some placeholder images if no uploads exist
+          const placeholderImages = [
+            '/placeholder.svg',
+            '/placeholder.svg',
+            '/placeholder.svg'
+          ];
+          setImages(placeholderImages);
         }
       } catch (error) {
-        console.error('Error fetching images:', error);
+        console.error('Failed to load images:', error);
+        // Fallback to default placeholder images
+        setImages(['/placeholder.svg']);
       }
     };
 
@@ -57,53 +55,65 @@ export default function AdminGallery() {
     setUploading(true);
 
     try {
-      if (!IS_API_KEY_CONFIGURED) {
-        throw new Error('VITE_UPLOAD_API_KEY is not configured.');
+      console.log('Processing file upload:', file.name);
+      
+      // Validate file is an image
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please select an image file');
       }
-      const uploadResponse = await fetch(UPLOAD_URL_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-        },
-        body: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-          folder: 'backgrounds',
-        }),
+      
+      // Check file size (limit to 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('Image must be smaller than 5MB');
+      }
+      
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to read file'));
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
       });
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Failed to get upload URL: ${uploadResponse.status}`);
-      }
-
-      const { uploadURL, fileUrl } = (await uploadResponse.json()) as {
-        uploadURL: string;
-        fileUrl: string;
+      
+      // Create unique filename with timestamp
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const uniqueFileName = `gallery-${timestamp}.${fileExtension}`;
+      
+      // Store in localStorage with metadata
+      const imageData = {
+        id: uniqueFileName,
+        name: file.name,
+        folder: 'gallery',
+        base64,
+        size: file.size,
+        type: file.type,
+        uploadedAt: timestamp
       };
-
-      await fetch(uploadURL, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      });
-
-      const saveResponse = await fetch(SAVE_IMAGE_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-        },
-        body: JSON.stringify({ fileUrl, folder: 'backgrounds' }),
-      });
-
-      if (!saveResponse.ok) {
-        throw new Error(`Failed to save image metadata: ${saveResponse.status}`);
-      }
-
-      setImages((prev) => [fileUrl, ...prev]);
+      
+      // Get existing uploads from localStorage
+      const existingUploads = JSON.parse(localStorage.getItem('uploadedImages') || '[]');
+      existingUploads.push(imageData);
+      
+      // Store updated list
+      localStorage.setItem('uploadedImages', JSON.stringify(existingUploads));
+      
+      // Simulate upload delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Add the new image to the gallery display
+      setImages((prev) => [base64, ...prev]);
+      
+      console.log('Upload completed successfully');
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error in file upload:', error);
+      alert(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setUploading(false);
       event.target.value = '';

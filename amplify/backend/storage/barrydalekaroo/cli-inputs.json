@@ -1,0 +1,12 @@
+{
+  "resourceName": "barrydalekaroo",
+  "policyUUID": "d76811db",
+  "bucketName": "karoolodge3ad9e6f1467e4bda8acaa46cbb246f78",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE"
+  ],
+  "triggerFunction": "S3Trigger7f0f973f",
+  "groupAccess": {}
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Karoo Lodge Storage</title>
+</head>
+<body>
+    <h1>Clear Karoo Lodge Storage</h1>
+    <button onclick="clearStorage()">Clear localStorage</button>
+    <div id="result"></div>
+
+    <script>
+        function clearStorage() {
+            const keys = Object.keys(localStorage);
+            const karooKeys = keys.filter(key => 
+                key.includes('karoo') || 
+                key.includes('lodge') || 
+                key.includes('gallery') || 
+                key.includes('GlobalState')
+            );
+            
+            console.log('Keys found:', karooKeys);
+            
+            karooKeys.forEach(key => {
+                console.log('Removing:', key);
+                localStorage.removeItem(key);
+            });
+            
+            // Clear all if no specific keys found
+            if (karooKeys.length === 0) {
+                localStorage.clear();
+                console.log('Cleared all localStorage');
+            }
+            
+            document.getElementById('result').innerHTML = `<p>Cleared ${karooKeys.length > 0 ? karooKeys.length + ' keys' : 'all localStorage'}</p>`;
+        }
+    </script>
+</body>
+</html>

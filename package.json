@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-amplify/ui-react": "^6.13.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -45,6 +46,7 @@
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.56.2",
     "@types/uuid": "^10.0.0",
+    "aws-amplify": "^6.15.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -73,7 +75,6 @@
     "@rollup/rollup-linux-x64-gnu": "^4.20.0"
   },
   "devDependencies": {
-    "rollup": "^4.20.0",
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.5.5",
@@ -87,6 +88,7 @@
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
     "postcss": "^8.4.47",
+    "rollup": "^4.20.0",
     "tailwindcss": "^3.4.11",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2",

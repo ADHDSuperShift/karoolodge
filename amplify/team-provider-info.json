@@ -1,0 +1,29 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-karoolodge-dev-b557e-authRole",
+      "UnauthRoleArn": "arn:aws:iam::628835453038:role/amplify-karoolodge-dev-b557e-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::628835453038:role/amplify-karoolodge-dev-b557e-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-karoolodge-dev-b557e-deployment",
+      "UnauthRoleName": "amplify-karoolodge-dev-b557e-unauthRole",
+      "StackName": "amplify-karoolodge-dev-b557e",
+      "StackId": "arn:aws:cloudformation:us-east-1:628835453038:stack/amplify-karoolodge-dev-b557e/ac4606a0-9ad4-11f0-8297-1289bcb7804b",
+      "AmplifyAppId": "df1jejc81o68a"
+    },
+    "categories": {
+      "auth": {
+        "karoolodgec834d956": {}
+      },
+      "function": {
+        "S3Trigger7f0f973f": {
+          "deploymentBucketName": "amplify-karoolodge-dev-b557e-deployment",
+          "s3Key": "amplify-builds/S3Trigger7f0f973f-70706a30507638794456-build.zip"
+        }
+      },
+      "storage": {
+        "barrydalekaroo": {}
+      }
+    }
+  }
+}

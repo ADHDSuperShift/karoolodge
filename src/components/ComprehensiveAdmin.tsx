@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Storage } from 'aws-amplify';
 import {
   DndContext,
   DragEndEvent,
@@ -53,6 +54,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalState } from '@/contexts/GlobalStateContext';
 import { cn } from '@/lib/utils';
+import UploadDebug from './UploadDebug';
 
 const galleryCategories: Array<{
   value: 'rooms' | 'dining' | 'bar' | 'wine' | 'scenery';
@@ -952,28 +954,56 @@ const ComprehensiveAdmin: React.FC = () => {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // Simple placeholder upload (returns placeholder URL)
+  // Convert file to base64 and add directly to global state
   const uploadFileToS3 = useCallback(
     async (file: File, folder: string): Promise<string> => {
       try {
-        // Create a fake URL for placeholder
-        const timestamp = Date.now();
-        const fileExtension = file.name.split('.').pop();
-        const fakeUrl = `/placeholder-${timestamp}.${fileExtension}`;
+        console.log('Processing file upload:', file.name, 'to', folder);
         
-        console.log('Mock upload:', file.name, 'to', folder);
+        // Validate file is an image
+        if (!file.type.startsWith('image/')) {
+          throw new Error('Please select an image file');
+        }
         
-        // Simulate upload delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Check file size (limit to 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error('Image must be smaller than 5MB');
+        }
+        
+        // Upload to S3
+        const uploadFileToS3 = async (file: File, folder: string) => {
+          const key = `${folder}/${Date.now()}-${file.name}`;
+          await Storage.put(key, file, { contentType: file.type });
+          return Storage.get(key); // returns a URL
+        };
+        
+        const uploadedUrl = await uploadFileToS3(file, folder);
+        
+        // If it's a gallery image, add it to the gallery
+        if (folder === 'gallery') {
+          const newGalleryImage = {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            src: uploadedUrl,
+            category: 'scenery' as const,
+            title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim(),
+            description: `Uploaded ${new Date().toLocaleDateString()}`
+          };
+          
+          // Add to global state
+          addGalleryImage(newGalleryImage);
+        }
+        
+        // Simulate upload delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         toast({
-          title: 'Mock upload successful',
-          description: `${file.name} uploaded (placeholder mode)`,
+          title: 'Upload successful',
+          description: `${file.name} has been uploaded successfully`,
         });
 
-        return fakeUrl;
+        return uploadedUrl; // Return the S3 URL for immediate use
       } catch (error) {
-        console.error('Mock upload failed:', error);
+        console.error('Upload failed:', error);
         toast({
           title: 'Upload failed',
           description: error instanceof Error ? error.message : 'Failed to upload file',
@@ -983,7 +1013,7 @@ const ComprehensiveAdmin: React.FC = () => {
         return '/placeholder.svg';
       }
     },
-    [toast]
+    [toast, addGalleryImage]
   );  const handleRoomsDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -1347,6 +1377,7 @@ const ComprehensiveAdmin: React.FC = () => {
 
   const renderGalleryTab = () => (
       <div className="space-y-6">
+        <UploadDebug />
         <Card className="border border-dashed border-amber-400 bg-amber-50/60 shadow-none">
           <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700">
