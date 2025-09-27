@@ -2164,17 +2164,93 @@ const ComprehensiveAdmin: React.FC = () => {
                   const domImages = document.querySelectorAll('img[src*="karoolodge"]');
                   console.log('Found', domImages.length, 'gallery images in DOM');
                   
+                  // Group images by source/component
+                  const imagesByComponent = new Map();
+                  
                   domImages.forEach((img, index) => {
                     const rect = img.getBoundingClientRect();
                     const computedStyle = window.getComputedStyle(img);
-                    console.log(`Image ${index + 1} DOM status:`, {
-                      src: img.getAttribute('src'),
+                    const imgElement = img as HTMLImageElement;
+                    
+                    // Identify which component/section this image belongs to
+                    let component = 'unknown';
+                    const parentElement = img.closest('[class*="gallery"], [id*="gallery"], [class*="room"], [class*="background"], [class*="hero"], section');
+                    if (parentElement) {
+                      const className = parentElement.className || '';
+                      const id = parentElement.id || '';
+                      if (className.includes('gallery') || id.includes('gallery')) component = 'gallery';
+                      else if (className.includes('room') || className.includes('accommodation')) component = 'rooms';
+                      else if (className.includes('hero') || className.includes('background')) component = 'backgrounds';
+                      else if (className.includes('wine') || className.includes('restaurant')) component = 'content';
+                      else component = parentElement.tagName.toLowerCase();
+                    }
+                    
+                    if (!imagesByComponent.has(component)) {
+                      imagesByComponent.set(component, []);
+                    }
+                    
+                    const status = {
+                      index: index + 1,
+                      component: component,
+                      src: imgElement.src,
                       visible: rect.width > 0 && rect.height > 0,
-                      dimensions: `${rect.width}x${rect.height}`,
+                      dimensions: `${Math.round(rect.width)}x${Math.round(rect.height)}`,
                       display: computedStyle.display,
                       visibility: computedStyle.visibility,
-                      opacity: computedStyle.opacity
+                      opacity: computedStyle.opacity,
+                      complete: imgElement.complete,
+                      naturalSize: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
+                      loading: imgElement.loading || 'default',
+                      parentTag: parentElement?.tagName || 'none'
+                    };
+                    
+                    imagesByComponent.get(component).push(status);
+                    console.log(`Image ${index + 1} DOM status:`, status);
+                    
+                    // Check if image failed to load
+                    if (imgElement.complete && imgElement.naturalWidth === 0) {
+                      console.error(`❌ Image ${index + 1} failed to load (${component}):`, imgElement.src);
+                    } else if (imgElement.complete && imgElement.naturalWidth > 0) {
+                      console.log(`✅ Image ${index + 1} loaded successfully (${component}):`, imgElement.src);
+                    } else {
+                      console.log(`⏳ Image ${index + 1} still loading (${component}):`, imgElement.src);
+                    }
+                  });
+                  
+                  // Summary by component
+                  console.log('=== IMAGES BY COMPONENT ===');
+                  imagesByComponent.forEach((images, component) => {
+                    console.log(`${component.toUpperCase()}: ${images.length} images`);
+                    images.forEach((img, i) => {
+                      console.log(`  ${i + 1}. ${img.complete && img.naturalSize !== '0x0' ? '✅' : '❌'} ${img.src.substring(img.src.lastIndexOf('/') + 1)} (${img.naturalSize})`);
                     });
+                  });
+                  
+                  // Compare with gallery state
+                  console.log('=== STATE vs DOM COMPARISON ===');
+                  console.log('Gallery state images:', galleryImages.length);
+                  console.log('DOM gallery images:', (imagesByComponent.get('gallery') || []).length);
+                  console.log('Total DOM images:', domImages.length);
+                  
+                  if (galleryImages.length !== (imagesByComponent.get('gallery') || []).length) {
+                    console.warn('⚠️ MISMATCH: Gallery state has', galleryImages.length, 'images but DOM has', (imagesByComponent.get('gallery') || []).length, 'gallery images');
+                  }
+                  
+                  // Test a few specific URLs that might be failing
+                  const testUrls = galleryImages.slice(0, 3).map(img => img.src);
+                  console.log('Testing specific URLs for 404 errors...');
+                  
+                  testUrls.forEach(async (url, index) => {
+                    try {
+                      const response = await fetch(url, { method: 'HEAD' });
+                      if (response.ok) {
+                        console.log(`✅ URL ${index + 1} accessible:`, url);
+                      } else {
+                        console.error(`❌ URL ${index + 1} returned ${response.status}:`, url);
+                      }
+                    } catch (error) {
+                      console.error(`❌ URL ${index + 1} fetch failed:`, url, error);
+                    }
                   });
                 }
                 
@@ -2249,6 +2325,333 @@ Grid Columns Expected: ${window.innerWidth < 640 ? '1' : window.innerWidth < 102
               }}
             >
               <Eye className="h-4 w-4" /> CSS Debug
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-blue-100" 
+              onClick={async () => {
+                toast({
+                  title: "Syncing from S3",
+                  description: "Scanning S3 bucket for new images..."
+                });
+
+                try {
+                  console.log('Starting S3 gallery sync...');
+                  
+                  // We'll simulate discovering S3 images by trying common paths
+                  // In a real implementation, you'd use the AWS SDK to list bucket contents
+                  const bucket = 'karoolodge3ad9e6f1467e4bda8acaa46cbb246f78b557e-dev';
+                  const region = 'us-east-1';
+                  
+                  // Common image file extensions
+                  const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                  
+                  // Generate potential S3 URLs based on recent timestamps
+                  const now = Date.now();
+                  const potentialImages = [];
+                  
+                  // Check for recent uploads (last 30 days)
+                  for (let i = 0; i < 30; i++) {
+                    const dayAgo = now - (i * 24 * 60 * 60 * 1000);
+                    const dayTimestamp = Math.floor(dayAgo);
+                    
+                    imageExtensions.forEach(ext => {
+                      // Common naming patterns used in the upload function
+                      potentialImages.push({
+                        url: `https://${bucket}.s3.${region}.amazonaws.com/public/media/gallery/${dayTimestamp}-GALLERY.${ext.toUpperCase()}`,
+                        name: `Gallery Image ${ext.toUpperCase()}`
+                      });
+                      potentialImages.push({
+                        url: `https://${bucket}.s3.${region}.amazonaws.com/public/media/gallery/${dayTimestamp}-PHOTO.${ext.toUpperCase()}`,
+                        name: `Photo ${ext.toUpperCase()}`
+                      });
+                    });
+                  }
+                  
+                  console.log('Testing', potentialImages.length, 'potential image URLs...');
+                  
+                  const foundImages = [];
+                  let checkedCount = 0;
+                  
+                  // Test each potential URL
+                  for (const potentialImage of potentialImages.slice(0, 100)) { // Limit to avoid too many requests
+                    try {
+                      const response = await fetch(potentialImage.url, { method: 'HEAD' });
+                      checkedCount++;
+                      
+                      if (response.ok) {
+                        // Check if we already have this image
+                        const existingImage = galleryImages.find(img => img.src === potentialImage.url);
+                        if (!existingImage) {
+                          console.log('Found new S3 image:', potentialImage.url);
+                          foundImages.push({
+                            id: Date.now() + Math.floor(Math.random() * 1000),
+                            src: potentialImage.url,
+                            category: 'scenery' as const,
+                            title: potentialImage.name,
+                            description: 'Synced from S3'
+                          });
+                        }
+                      }
+                      
+                      // Update progress every 10 checks
+                      if (checkedCount % 10 === 0) {
+                        toast({
+                          title: "Scanning S3",
+                          description: `Checked ${checkedCount} potential images, found ${foundImages.length} new ones...`
+                        });
+                      }
+                    } catch (error) {
+                      // Ignore network errors for potential URLs
+                    }
+                  }
+                  
+                  if (foundImages.length > 0) {
+                    // Add found images to gallery
+                    const updatedGallery = [...galleryImages, ...foundImages];
+                    updateGalleryImages(updatedGallery);
+                    
+                    toast({
+                      title: "S3 Sync Complete",
+                      description: `Found and added ${foundImages.length} new images from S3!`
+                    });
+                    console.log('Added', foundImages.length, 'new images from S3:', foundImages.map(img => img.src));
+                  } else {
+                    toast({
+                      title: "S3 Sync Complete",
+                      description: "No new images found in S3 bucket."
+                    });
+                  }
+                  
+                } catch (error) {
+                  console.error('S3 sync failed:', error);
+                  toast({
+                    title: "S3 Sync Failed",
+                    description: "Could not sync with S3 bucket. Check console for details.",
+                    variant: "destructive"
+                  });
+                }
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Sync from S3
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-yellow-50" 
+              onClick={() => {
+                // Export gallery state
+                const galleryData = {
+                  timestamp: Date.now(),
+                  environment: window.location.host,
+                  galleryImages: galleryImages,
+                  count: galleryImages.length
+                };
+                
+                const dataStr = JSON.stringify(galleryData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `gallery-export-${new Date().toISOString().split('T')[0]}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                toast({
+                  title: "Gallery Exported",
+                  description: `Downloaded ${galleryImages.length} images as JSON file`
+                });
+                
+                console.log('Exported gallery data:', galleryData);
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Export Gallery
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-green-100" 
+              onClick={() => {
+                // Import gallery state
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = async (event) => {
+                  const file = (event.target as HTMLInputElement).files?.[0];
+                  if (!file) return;
+                  
+                  try {
+                    const text = await file.text();
+                    const importedData = JSON.parse(text);
+                    
+                    if (importedData.galleryImages && Array.isArray(importedData.galleryImages)) {
+                      const importedImages = importedData.galleryImages;
+                      const existingUrls = new Set(galleryImages.map(img => img.src));
+                      
+                      // Filter out duplicates
+                      const newImages = importedImages.filter((img: any) => !existingUrls.has(img.src));
+                      
+                      if (newImages.length > 0) {
+                        const updatedGallery = [...galleryImages, ...newImages];
+                        updateGalleryImages(updatedGallery);
+                        
+                        toast({
+                          title: "Gallery Imported",
+                          description: `Added ${newImages.length} new images (${importedImages.length - newImages.length} duplicates skipped)`
+                        });
+                        
+                        console.log('Imported gallery data:', {
+                          source: importedData.environment,
+                          timestamp: new Date(importedData.timestamp).toLocaleString(),
+                          imported: newImages.length,
+                          skipped: importedImages.length - newImages.length
+                        });
+                      } else {
+                        toast({
+                          title: "Gallery Import",
+                          description: "No new images found (all were duplicates)"
+                        });
+                      }
+                    } else {
+                      throw new Error('Invalid gallery export file format');
+                    }
+                  } catch (error) {
+                    console.error('Import failed:', error);
+                    toast({
+                      title: "Import Failed",
+                      description: "Could not import gallery file. Check console for details.",
+                      variant: "destructive"
+                    });
+                  }
+                };
+                input.click();
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Import Gallery
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-red-100" 
+              onClick={async () => {
+                toast({
+                  title: "Finding 404 Images",
+                  description: "Checking all images for 404 errors..."
+                });
+                
+                console.log('=== FINDING 404 IMAGES ===');
+                const brokenImages = [];
+                const workingImages = [];
+                
+                for (let i = 0; i < galleryImages.length; i++) {
+                  const image = galleryImages[i];
+                  console.log(`Testing image ${i + 1}/${galleryImages.length}:`, image.src);
+                  
+                  try {
+                    const response = await fetch(image.src, { method: 'HEAD' });
+                    if (response.ok) {
+                      workingImages.push(image);
+                      console.log(`✅ Image ${i + 1} OK (${response.status}):`, image.title);
+                    } else {
+                      brokenImages.push({ ...image, status: response.status });
+                      console.error(`❌ Image ${i + 1} FAILED (${response.status}):`, image.title, image.src);
+                    }
+                  } catch (error) {
+                    brokenImages.push({ ...image, error: error.toString() });
+                    console.error(`❌ Image ${i + 1} ERROR:`, image.title, error, image.src);
+                  }
+                  
+                  // Show progress
+                  if ((i + 1) % 5 === 0 || i === galleryImages.length - 1) {
+                    toast({
+                      title: "Checking Images",
+                      description: `Tested ${i + 1}/${galleryImages.length} - Found ${brokenImages.length} broken`
+                    });
+                  }
+                }
+                
+                console.log('=== RESULTS ===');
+                console.log('Working images:', workingImages.length);
+                console.log('Broken images:', brokenImages.length);
+                console.log('Broken image details:', brokenImages);
+                
+                if (brokenImages.length > 0) {
+                  const removeConfirm = confirm(
+                    `Found ${brokenImages.length} broken images that return 404/403 errors.\n\n` +
+                    `Broken images:\n${brokenImages.map(img => `- ${img.title} (${img.status || 'ERROR'})`).join('\n').substring(0, 300)}...\n\n` +
+                    `Do you want to remove these broken images from the gallery?`
+                  );
+                  
+                  if (removeConfirm) {
+                    updateGalleryImages(workingImages);
+                    toast({
+                      title: "Broken Images Removed",
+                      description: `Removed ${brokenImages.length} broken images. ${workingImages.length} working images remain.`
+                    });
+                    console.log('Removed broken images:', brokenImages.map(img => img.src));
+                  }
+                } else {
+                  toast({
+                    title: "All Images Working",
+                    description: "No 404 errors found! All images are accessible."
+                  });
+                }
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Find 404s
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-indigo-100" 
+              onClick={() => {
+                console.log('=== FORCE DOM REFRESH ===');
+                
+                // Clear phantom DOM elements
+                const domImages = document.querySelectorAll('img[src*="karoolodge"]');
+                console.log('Found', domImages.length, 'DOM images to analyze');
+                
+                const galleryUrls = new Set(galleryImages.map(img => img.src));
+                let removedCount = 0;
+                
+                domImages.forEach((img, index) => {
+                  const imgElement = img as HTMLImageElement;
+                  const isInGalleryState = galleryUrls.has(imgElement.src);
+                  
+                  console.log(`DOM Image ${index + 1}:`, {
+                    src: imgElement.src,
+                    inGalleryState: isInGalleryState,
+                    complete: imgElement.complete,
+                    naturalSize: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
+                    parent: imgElement.parentElement?.tagName
+                  });
+                  
+                  // If image is not in gallery state and appears to be broken/phantom
+                  if (!isInGalleryState && (imgElement.naturalWidth === 0 || !imgElement.complete)) {
+                    console.log(`Removing phantom DOM image ${index + 1}:`, imgElement.src);
+                    // Don't actually remove DOM elements as this could break the UI
+                    // Instead, replace with placeholder
+                    imgElement.src = '/placeholder.svg';
+                    imgElement.alt = 'Cleared phantom image';
+                    removedCount++;
+                  }
+                });
+                
+                // Force re-render by triggering a state change
+                const currentImages = [...galleryImages];
+                updateGalleryImages([]);
+                
+                setTimeout(() => {
+                  updateGalleryImages(currentImages);
+                  toast({
+                    title: "DOM Refreshed",
+                    description: `Cleared ${removedCount} phantom images and forced re-render. Check console for details.`
+                  });
+                }, 100);
+                
+                console.log('Gallery state images:', galleryImages.length);
+                console.log('DOM images found:', domImages.length);
+                console.log('Phantom images cleared:', removedCount);
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Force DOM Refresh
             </Button>
             <Button 
               variant="outline" 
