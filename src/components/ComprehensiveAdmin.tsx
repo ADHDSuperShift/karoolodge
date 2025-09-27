@@ -118,15 +118,34 @@ const SortableGalleryCard: React.FC<SortableGalleryProps> = ({ image, onMetaChan
         </button>
       </div>
 
-      <div className="aspect-video w-full bg-slate-100">
+      <div className="aspect-video w-full bg-slate-100 relative">
         <img
           src={image.src}
           alt={image.title}
           className="h-full w-full object-cover"
+          loading="lazy"
           onError={(event) => {
+            console.error('Image failed to load on mobile/device:', {
+              src: image.src,
+              userAgent: navigator.userAgent,
+              timestamp: new Date().toISOString(),
+              error: 'Image load failed'
+            });
             (event.currentTarget as HTMLImageElement).src = '/placeholder.svg';
           }}
+          onLoad={() => {
+            console.log('Image loaded successfully:', image.src);
+          }}
+          style={{
+            maxWidth: '100%',
+            height: 'auto',
+            objectFit: 'cover'
+          }}
         />
+        {/* Loading indicator for slow networks */}
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+          <div className="text-slate-400 text-sm">Loading...</div>
+        </div>
       </div>
 
       <CardContent className="space-y-4 p-5">
@@ -851,6 +870,21 @@ const multiLine = (value: string): string[] => value
   .filter(Boolean);
 
 const ComprehensiveAdmin: React.FC = () => {
+  // Mobile diagnostics - log device info
+  React.useEffect(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isTouch = 'ontouchstart' in window;
+    console.log('Device diagnostics:', {
+      userAgent: navigator.userAgent,
+      isMobile,
+      isTouch,
+      screenSize: `${screen.width}x${screen.height}`,
+      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+      pixelRatio: window.devicePixelRatio,
+      onlineStatus: navigator.onLine
+    });
+  }, []);
+
   // Utility to clear localStorage if images aren't loading
   const clearStorageAndRefresh = useCallback(() => {
     if (confirm('This will clear all cached data and refresh the page. Are you sure?')) {
@@ -1837,6 +1871,39 @@ const ComprehensiveAdmin: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button variant="secondary" className="gap-2" onClick={clearStorageAndRefresh}>
               <Trash2 className="h-4 w-4" /> Clear cache
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={async () => {
+                // Mobile debug info with network test
+                const testImageUrl = galleryImages[0]?.src;
+                let networkTest = 'No images to test';
+                
+                if (testImageUrl) {
+                  try {
+                    const response = await fetch(testImageUrl, { method: 'HEAD' });
+                    networkTest = `Status: ${response.status} ${response.statusText}`;
+                  } catch (error) {
+                    networkTest = `Error: ${error}`;
+                  }
+                }
+                
+                const debugInfo = {
+                  userAgent: navigator.userAgent,
+                  isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+                  screenSize: `${screen.width}x${screen.height}`,
+                  viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+                  pixelRatio: window.devicePixelRatio,
+                  onlineStatus: navigator.onLine,
+                  galleryCount: galleryImages.length,
+                  sampleImageUrl: testImageUrl,
+                  networkTest
+                };
+                alert(`Mobile Debug Info:\n${JSON.stringify(debugInfo, null, 2)}`);
+              }}
+            >
+              <Eye className="h-4 w-4" /> Debug
             </Button>
             <Button variant="outline" className="gap-2" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" /> Sign out
