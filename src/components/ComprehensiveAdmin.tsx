@@ -2535,70 +2535,173 @@ Grid Columns Expected: ${window.innerWidth < 640 ? '1' : window.innerWidth < 102
               variant="outline" 
               className="gap-2 bg-red-100" 
               onClick={() => {
-                console.log('=== MOBILE IMAGE EMERGENCY DIAGNOSTIC ===');
+                console.log('=== MOBILE VISUAL DIAGNOSTIC ===');
                 
-                // Test ALL images on the page
+                // Test actual visibility, not just loading status
                 const allImages = document.querySelectorAll('img');
                 console.log('Total images found on page:', allImages.length);
                 
-                let workingImages = 0;
-                let brokenImages = 0;
+                let visibleImages = 0;
+                let hiddenImages = 0;
                 let s3Images = 0;
+                let brokenS3Images = 0;
                 
                 allImages.forEach((img, index) => {
                   const imgElement = img as HTMLImageElement;
-                  const isLoaded = imgElement.complete && imgElement.naturalHeight > 0;
                   const isS3 = imgElement.src.includes('karoolodge') || imgElement.src.includes('amazonaws');
                   const isPlaceholder = imgElement.src.includes('placeholder');
                   
-                  if (isS3) s3Images++;
+                  // Check actual visibility
+                  const rect = imgElement.getBoundingClientRect();
+                  const isVisible = rect.width > 0 && rect.height > 0 && 
+                                  window.getComputedStyle(imgElement).display !== 'none' &&
+                                  window.getComputedStyle(imgElement).visibility !== 'hidden' &&
+                                  window.getComputedStyle(imgElement).opacity !== '0';
                   
-                  if (isLoaded && !isPlaceholder) {
-                    workingImages++;
-                    console.log(`✅ Working image ${index + 1}:`, imgElement.src.split('/').pop());
+                  const hasNaturalSize = imgElement.naturalWidth > 0 && imgElement.naturalHeight > 0;
+                  
+                  if (isS3) {
+                    s3Images++;
+                    if (!hasNaturalSize || !isVisible) {
+                      brokenS3Images++;
+                      console.log(`❌ S3 Image ${index + 1} NOT DISPLAYING:`, {
+                        src: imgElement.src.split('/').pop(),
+                        naturalSize: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
+                        computedSize: `${rect.width}x${rect.height}`,
+                        display: window.getComputedStyle(imgElement).display,
+                        visibility: window.getComputedStyle(imgElement).visibility,
+                        opacity: window.getComputedStyle(imgElement).opacity,
+                        complete: imgElement.complete
+                      });
+                    } else {
+                      console.log(`✅ S3 Image ${index + 1} DISPLAYING:`, imgElement.src.split('/').pop());
+                    }
+                  }
+                  
+                  if (isVisible && hasNaturalSize && !isPlaceholder) {
+                    visibleImages++;
                   } else {
-                    brokenImages++;
-                    console.log(`❌ Broken image ${index + 1}:`, imgElement.src.split('/').pop(), 
-                      `(complete: ${imgElement.complete}, size: ${imgElement.naturalWidth}x${imgElement.naturalHeight})`);
+                    hiddenImages++;
+                    if (!isPlaceholder && !imgElement.src.includes('svg+xml')) {
+                      console.log(`❌ Hidden/Broken image ${index + 1}:`, {
+                        src: imgElement.src.split('/').pop(),
+                        visible: isVisible,
+                        hasSize: hasNaturalSize,
+                        naturalSize: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
+                        computedSize: `${rect.width}x${rect.height}`
+                      });
+                    }
                   }
                 });
                 
-                console.log('\n=== SUMMARY ===');
+                console.log('\n=== VISIBILITY SUMMARY ===');
                 console.log('Total images:', allImages.length);
-                console.log('S3 images:', s3Images);
-                console.log('Working images:', workingImages);
-                console.log('Broken images:', brokenImages);
-                console.log('Mobile user agent:', /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+                console.log('S3 images found:', s3Images);
+                console.log('S3 images broken/invisible:', brokenS3Images);
+                console.log('Visible real images:', visibleImages);
+                console.log('Hidden/broken images:', hiddenImages);
+                console.log('Is mobile user agent:', /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
                 
-                // Try to fix all broken S3 images
-                let fixAttempts = 0;
-                allImages.forEach((img) => {
+                // Force reload all S3 images with mobile-friendly attributes
+                let fixedCount = 0;
+                allImages.forEach((img, index) => {
                   const imgElement = img as HTMLImageElement;
                   const isS3 = imgElement.src.includes('karoolodge') || imgElement.src.includes('amazonaws');
-                  const isLoaded = imgElement.complete && imgElement.naturalHeight > 0;
                   
-                  if (isS3 && !isLoaded && !imgElement.src.includes('placeholder')) {
-                    console.log('Attempting to fix:', imgElement.src);
+                  if (isS3) {
+                    console.log(`Fixing S3 image ${index + 1}:`, imgElement.src.split('/').pop());
                     
-                    // Remove problematic attributes
+                    // Remove all problematic attributes
                     imgElement.removeAttribute('crossOrigin');
                     imgElement.removeAttribute('referrerPolicy');
                     imgElement.removeAttribute('loading');
                     
-                    // Simple reload
-                    const originalSrc = imgElement.src;
-                    imgElement.src = originalSrc;
-                    fixAttempts++;
+                    // Add mobile-friendly styles
+                    imgElement.style.display = 'block';
+                    imgElement.style.maxWidth = '100%';
+                    imgElement.style.height = 'auto';
+                    
+                    // Force reload
+                    const originalSrc = imgElement.src.split('?')[0]; // Remove existing params
+                    imgElement.src = `${originalSrc}?mobile-fix=${Date.now()}`;
+                    fixedCount++;
                   }
                 });
                 
+                console.log(`Attempted to fix ${fixedCount} S3 images`);
+                
                 toast({
-                  title: "Mobile Image Diagnostic Complete",
-                  description: `Found ${allImages.length} images: ${workingImages} working, ${brokenImages} broken, ${s3Images} from S3. Fixed ${fixAttempts} images.`
+                  title: "Mobile Visual Diagnostic",
+                  description: `Found ${s3Images} S3 images, ${brokenS3Images} broken/invisible. Fixed ${fixedCount} images. Check console.`
                 });
               }}
             >
-              <ImageIcon className="h-4 w-4" /> Mobile Image Emergency
+              <ImageIcon className="h-4 w-4" /> Mobile Visual Fix
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="gap-2 bg-orange-600 hover:bg-orange-700" 
+              onClick={() => {
+                if (!confirm('This will completely reset all S3 images with mobile-friendly loading. This may temporarily break images while they reload. Continue?')) {
+                  return;
+                }
+                
+                console.log('=== NUCLEAR MOBILE FIX ===');
+                
+                // Find ALL S3 images and completely reset them
+                const allImages = document.querySelectorAll('img');
+                const s3Images = Array.from(allImages).filter(img => 
+                  img.src.includes('karoolodge') || img.src.includes('amazonaws')
+                ) as HTMLImageElement[];
+                
+                console.log('Found', s3Images.length, 'S3 images to reset');
+                
+                s3Images.forEach((img, index) => {
+                  console.log(`Resetting S3 image ${index + 1}:`, img.src.split('/').pop());
+                  
+                  // Store original src without parameters
+                  const cleanSrc = img.src.split('?')[0];
+                  
+                  // Completely remove the image temporarily
+                  img.style.display = 'none';
+                  img.src = '';
+                  
+                  // Remove ALL problematic attributes
+                  img.removeAttribute('crossOrigin');
+                  img.removeAttribute('referrerPolicy'); 
+                  img.removeAttribute('loading');
+                  img.removeAttribute('decoding');
+                  
+                  // Set mobile-optimized attributes
+                  img.setAttribute('loading', 'eager'); // Force immediate loading
+                  img.style.display = 'block';
+                  img.style.maxWidth = '100%';
+                  img.style.height = 'auto';
+                  img.style.objectFit = 'cover';
+                  
+                  // Add error handling
+                  img.onerror = function() {
+                    console.error('Failed to load after reset:', cleanSrc);
+                    this.src = '/placeholder.svg';
+                  };
+                  
+                  img.onload = function() {
+                    console.log('Successfully loaded after reset:', cleanSrc.split('/').pop());
+                  };
+                  
+                  // Reload with clean URL and timestamp
+                  setTimeout(() => {
+                    img.src = `${cleanSrc}?reset=${Date.now()}`;
+                  }, index * 100); // Stagger loads to avoid overwhelming
+                });
+                
+                toast({
+                  title: "Nuclear Mobile Fix Applied",
+                  description: `Reset ${s3Images.length} S3 images with mobile-friendly loading. Check if images appear now.`
+                });
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Nuclear Fix (Reset All S3 Images)
             </Button>
             <Button 
               variant="outline" 
