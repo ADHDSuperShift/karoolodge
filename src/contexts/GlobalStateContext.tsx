@@ -747,6 +747,19 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
           }
           return true;
         });
+        
+        // Remove duplicates based on src URL
+        const seenUrls = new Set();
+        savedGallery = savedGallery.filter((img: any) => {
+          if (seenUrls.has(img.src)) {
+            console.warn('Removing duplicate gallery image:', img.title || img.id);
+            return false;
+          }
+          seenUrls.add(img.src);
+          return true;
+        });
+        
+        console.log(`After cleanup: ${savedGallery.length} unique gallery images`);
       }
     } catch (error) {
       console.error('Failed to load gallery from localStorage:', error);
@@ -886,6 +899,13 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
     };
     
     setState(prev => {
+      // Check if an image with the same src already exists
+      const existingImage = prev.galleryImages.find(img => img.src === fixedImage.src);
+      if (existingImage) {
+        console.warn('Image already exists in gallery, skipping:', fixedImage.src);
+        return prev; // Don't add duplicate
+      }
+      
       const newGallery = [...prev.galleryImages, fixedImage];
       
       // Save to localStorage
