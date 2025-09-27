@@ -69,14 +69,26 @@ const GallerySection: React.FC = () => {
           ))}
         </div>
 
-        {/* Image Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Image Grid - Mobile-first responsive design */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredImages.map((image, index) => (
             <div
               key={image.id}
-              className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer"
+              className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer bg-gray-200"
               onClick={() => openLightbox(index)}
+              style={{
+                // Ensure minimum dimensions on mobile
+                minHeight: '200px',
+                minWidth: '200px'
+              }}
             >
+              {/* Debug overlay for mobile */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs p-1 rounded z-10">
+                  {image.id}
+                </div>
+              )}
+              
               <img
                 src={image.src}
                 alt={image.title}
@@ -84,6 +96,21 @@ const GallerySection: React.FC = () => {
                 loading="lazy"
                 crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
+                style={{
+                  // Mobile-specific CSS fixes
+                  imageRendering: 'auto',
+                  backfaceVisibility: 'hidden',
+                  transform: 'translateZ(0)', // Force hardware acceleration
+                  // Ensure image is always visible
+                  display: 'block !important',
+                  visibility: 'visible !important',
+                  opacity: '1 !important',
+                  // Mobile-safe dimensions
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  width: '100%',
+                  height: '100%'
+                }}
                 onError={(event) => {
                   const img = event.currentTarget as HTMLImageElement;
                   console.error('Image failed to load:', image.src);
@@ -91,13 +118,62 @@ const GallerySection: React.FC = () => {
                   console.error('Network state:', navigator.onLine ? 'online' : 'offline');
                   console.error('Image natural dimensions:', img.naturalWidth, 'x', img.naturalHeight);
                   
-                  // Try cache-busting if this is the first failure
-                  if (!img.src.includes('?cache-bust=')) {
-                    const cacheBustUrl = `${image.src}${image.src.includes('?') ? '&' : '?'}cache-bust=${Date.now()}`;
-                    console.log('Trying cache-bust:', cacheBustUrl);
+                  // Detect iOS/Safari for specific fixes
+                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                  const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+                  
+                  // Mobile-specific retry strategies
+                  if (!img.dataset.retryCount) {
+                    img.dataset.retryCount = '1';
+                    
+                    if (isIOS || isSafari) {
+                      // iOS/Safari Strategy: Remove all special attributes
+                      console.log('iOS/Safari detected - trying simplified loading');
+                      img.removeAttribute('crossOrigin');
+                      img.removeAttribute('referrerPolicy');
+                      img.removeAttribute('loading');
+                      img.src = image.src;
+                    } else {
+                      // Strategy 1: Try without CORS for mobile
+                      const tempImg = new Image();
+                      tempImg.onload = () => {
+                        console.log('Retry without CORS successful for:', image.src);
+                        img.crossOrigin = '';
+                        img.src = image.src;
+                      };
+                      tempImg.onerror = () => {
+                        // Strategy 2: Try with cache-busting
+                        const cacheBustUrl = `${image.src}${image.src.includes('?') ? '&' : '?'}cb=${Date.now()}`;
+                        console.log('Trying cache-bust for mobile:', cacheBustUrl);
+                        img.src = cacheBustUrl;
+                      };
+                      tempImg.src = image.src;
+                    }
+                  } else if (img.dataset.retryCount === '1') {
+                    img.dataset.retryCount = '2';
+                    // Strategy 3: Force HTTPS and cache-busting
+                    let fixedUrl = image.src;
+                    if (fixedUrl.startsWith('http:')) {
+                      fixedUrl = fixedUrl.replace('http:', 'https:');
+                      console.log('Converting HTTP to HTTPS for mobile:', fixedUrl);
+                    }
+                    const cacheBustUrl = `${fixedUrl}${fixedUrl.includes('?') ? '&' : '?'}mobile=${Date.now()}`;
                     img.src = cacheBustUrl;
+                  } else if (img.dataset.retryCount === '2') {
+                    img.dataset.retryCount = '3';
+                    // Strategy 4: Try original URL one more time with minimal attributes
+                    img.removeAttribute('crossOrigin');
+                    img.removeAttribute('referrerPolicy');
+                    img.removeAttribute('loading');
+                    img.style.display = 'block';
+                    img.style.visibility = 'visible';
+                    img.src = image.src;
+                    console.log('Final retry with minimal attributes:', image.src);
                   } else {
+                    // Final fallback
                     img.src = '/placeholder.svg';
+                    img.alt = `${image.title} (loading failed)`;
+                    console.error('All retry strategies failed for:', image.src);
                   }
                 }}
                 onLoad={() => {

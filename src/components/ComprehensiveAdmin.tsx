@@ -1948,23 +1948,40 @@ const ComprehensiveAdmin: React.FC = () => {
               onClick={async () => {
                 console.log('Testing all gallery images for accessibility...');
                 const workingImages = [];
+                const brokenImages = [];
+                
+                // Show immediate feedback
+                toast({
+                  title: "Testing Images",
+                  description: `Testing ${galleryImages.length} images...`
+                });
                 
                 for (const image of galleryImages) {
                   try {
-                    const response = await fetch(image.src, { method: 'HEAD' });
+                    console.log('Testing:', image.src);
+                    const response = await fetch(image.src, { 
+                      method: 'HEAD',
+                      mode: 'cors',
+                      cache: 'no-cache'
+                    });
                     if (response.ok) {
                       workingImages.push(image);
-                      console.log('✓ Working:', image.src);
+                      console.log('✓ Working (', response.status, '):', image.title);
                     } else {
-                      console.log('✗ Broken (', response.status, '):', image.src);
+                      brokenImages.push({ ...image, status: response.status });
+                      console.log('✗ Broken (', response.status, '):', image.title, image.src);
                     }
                   } catch (error) {
-                    console.log('✗ Failed:', image.src, error);
+                    brokenImages.push({ ...image, error: error.toString() });
+                    console.log('✗ Failed:', image.title, error.toString(), image.src);
                   }
                 }
                 
-                if (workingImages.length !== galleryImages.length) {
-                  const removedCount = galleryImages.length - workingImages.length;
+                console.log(`Results: ${workingImages.length} working, ${brokenImages.length} broken`);
+                console.log('Broken images:', brokenImages);
+                
+                if (brokenImages.length > 0) {
+                  const removedCount = brokenImages.length;
                   updateGalleryImages(workingImages);
                   toast({
                     title: "Broken Images Removed",
@@ -1982,6 +1999,259 @@ const ComprehensiveAdmin: React.FC = () => {
             </Button>
             <Button 
               variant="outline" 
+              className="gap-2 bg-blue-50" 
+              onClick={() => {
+                console.log('=== GALLERY DEBUG INFO ===');
+                console.log('Total images:', galleryImages.length);
+                console.log('Gallery state:', galleryImages);
+                console.log('LocalStorage gallery:', localStorage.getItem('karoo-gallery-state'));
+                console.log('LocalStorage global:', localStorage.getItem('karoo-global-state'));
+                
+                // Test a simple image load
+                if (galleryImages.length > 0) {
+                  const testImg = new Image();
+                  testImg.onload = () => console.log('✓ Test image loaded successfully');
+                  testImg.onerror = (error) => console.log('✗ Test image failed:', error);
+                  testImg.src = galleryImages[0].src;
+                  console.log('Testing first image:', galleryImages[0].src);
+                }
+                
+                toast({
+                  title: "Debug Info",
+                  description: `Gallery has ${galleryImages.length} images. Check console for details.`
+                });
+              }}
+            >
+              <Eye className="h-4 w-4" /> Quick Debug
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="gap-2" 
+              onClick={() => {
+                if (confirm('This will clear ALL gallery images. Are you sure?')) {
+                  updateGalleryImages([]);
+                  localStorage.removeItem('karoo-gallery-state');
+                  toast({
+                    title: "Gallery Cleared",
+                    description: "All gallery images have been removed."
+                  });
+                  console.log('Gallery cleared - you can now upload fresh images');
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" /> Clear All
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-green-50" 
+              onClick={async () => {
+                toast({
+                  title: "Mobile Fix Applied",
+                  description: "Refreshing gallery with mobile optimizations..."
+                });
+                
+                // Force a gallery refresh with mobile-specific optimizations
+                const currentImages = [...galleryImages];
+                
+                // Clear and reload to force fresh image loading
+                updateGalleryImages([]);
+                
+                setTimeout(() => {
+                  // Add back images with mobile-optimized URLs
+                  const mobileOptimizedImages = currentImages.map(img => ({
+                    ...img,
+                    src: img.src.includes('?') 
+                      ? `${img.src}&mobile=1&t=${Date.now()}`
+                      : `${img.src}?mobile=1&t=${Date.now()}`
+                  }));
+                  
+                  updateGalleryImages(mobileOptimizedImages);
+                  console.log('Applied mobile optimizations to', mobileOptimizedImages.length, 'images');
+                  
+                  toast({
+                    title: "Mobile Fix Complete",
+                    description: "Gallery refreshed with mobile optimizations. Test on mobile now!"
+                  });
+                }, 1000);
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Fix Mobile
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-purple-50" 
+              onClick={() => {
+                console.log('=== COMPREHENSIVE MOBILE DIAGNOSTIC ===');
+                
+                // Check protocol issues
+                const currentProtocol = window.location.protocol;
+                console.log('Current site protocol:', currentProtocol);
+                
+                // Check for mixed content issues
+                const httpsImages = galleryImages.filter(img => img.src.startsWith('https://'));
+                const httpImages = galleryImages.filter(img => img.src.startsWith('http://'));
+                
+                console.log('HTTPS images:', httpsImages.length);
+                console.log('HTTP images:', httpImages.length);
+                
+                if (currentProtocol === 'https:' && httpImages.length > 0) {
+                  console.warn('⚠️ MIXED CONTENT DETECTED! HTTPS site loading HTTP images.');
+                  console.log('Problematic HTTP images:', httpImages.map(img => img.src));
+                }
+                
+                // Check for signed URL patterns
+                const signedUrls = galleryImages.filter(img => 
+                  img.src.includes('X-Amz-Algorithm') || 
+                  img.src.includes('Signature') || 
+                  img.src.includes('Expires')
+                );
+                
+                if (signedUrls.length > 0) {
+                  console.warn('⚠️ SIGNED URLs DETECTED! These expire after 15 minutes.');
+                  console.log('Signed URLs:', signedUrls.map(img => img.src));
+                } else {
+                  console.log('✅ Using permanent S3 URLs (no expiry)');
+                }
+                
+                // Check viewport and CSS
+                console.log('Viewport width:', window.innerWidth);
+                console.log('Screen width:', screen.width);
+                console.log('Device pixel ratio:', window.devicePixelRatio);
+                console.log('Is mobile user agent:', /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+                
+                // Check for Safari/iOS
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+                
+                if (isIOS || isSafari) {
+                  console.warn('⚠️ iOS/Safari detected - using simplified loading strategy');
+                }
+                
+                // Check gallery container dimensions
+                const gallerySection = document.querySelector('#gallery') || document.querySelector('[id="gallery"]');
+                if (gallerySection) {
+                  const rect = gallerySection.getBoundingClientRect();
+                  console.log('Gallery section dimensions:', {
+                    width: rect.width,
+                    height: rect.height,
+                    visible: rect.width > 0 && rect.height > 0
+                  });
+                }
+                
+                // Check image grid dimensions
+                const imageGrid = document.querySelector('.grid');
+                if (imageGrid) {
+                  const gridRect = imageGrid.getBoundingClientRect();
+                  console.log('Image grid dimensions:', {
+                    width: gridRect.width,
+                    height: gridRect.height,
+                    visible: gridRect.width > 0 && gridRect.height > 0
+                  });
+                }
+                
+                // Test first image dimensions and visibility
+                if (galleryImages.length > 0) {
+                  const testImg = new Image();
+                  testImg.onload = function() {
+                    console.log('✅ Test image natural size:', this.naturalWidth, 'x', this.naturalHeight);
+                  };
+                  testImg.onerror = function() {
+                    console.error('❌ Test image failed to load');
+                  };
+                  testImg.src = galleryImages[0].src;
+                  
+                  // Check actual DOM image elements
+                  const domImages = document.querySelectorAll('img[src*="karoolodge"]');
+                  console.log('Found', domImages.length, 'gallery images in DOM');
+                  
+                  domImages.forEach((img, index) => {
+                    const rect = img.getBoundingClientRect();
+                    const computedStyle = window.getComputedStyle(img);
+                    console.log(`Image ${index + 1} DOM status:`, {
+                      src: img.getAttribute('src'),
+                      visible: rect.width > 0 && rect.height > 0,
+                      dimensions: `${rect.width}x${rect.height}`,
+                      display: computedStyle.display,
+                      visibility: computedStyle.visibility,
+                      opacity: computedStyle.opacity
+                    });
+                  });
+                }
+                
+                toast({
+                  title: "Mobile Diagnostic Complete",
+                  description: "Check console for detailed mobile compatibility analysis."
+                });
+              }}
+            >
+              <Eye className="h-4 w-4" /> Mobile Diagnostic
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-orange-50" 
+              onClick={() => {
+                // Create CSS debugging overlay
+                const existingOverlay = document.getElementById('mobile-debug-overlay');
+                if (existingOverlay) {
+                  existingOverlay.remove();
+                  return;
+                }
+                
+                const overlay = document.createElement('div');
+                overlay.id = 'mobile-debug-overlay';
+                overlay.style.cssText = `
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background: rgba(0,0,0,0.8);
+                  color: white;
+                  padding: 20px;
+                  z-index: 9999;
+                  overflow: auto;
+                  font-family: monospace;
+                  font-size: 12px;
+                `;
+                
+                const info = `
+=== MOBILE CSS DEBUG OVERLAY ===
+Click anywhere to close
+
+Viewport: ${window.innerWidth}x${window.innerHeight}
+Screen: ${screen.width}x${screen.height}
+Pixel Ratio: ${window.devicePixelRatio}
+User Agent: ${navigator.userAgent}
+
+Gallery Images: ${galleryImages.length}
+Protocol: ${window.location.protocol}
+
+Image URLs:
+${galleryImages.slice(0, 5).map((img, i) => `${i+1}. ${img.src}`).join('\n')}
+
+CSS Breakpoints Test:
+- Mobile (< 640px): ${window.innerWidth < 640 ? '✅ ACTIVE' : '❌ inactive'}
+- SM (≥ 640px): ${window.innerWidth >= 640 ? '✅ ACTIVE' : '❌ inactive'}
+- LG (≥ 1024px): ${window.innerWidth >= 1024 ? '✅ ACTIVE' : '❌ inactive'}
+- XL (≥ 1280px): ${window.innerWidth >= 1280 ? '✅ ACTIVE' : '❌ inactive'}
+
+Grid Columns Expected: ${window.innerWidth < 640 ? '1' : window.innerWidth < 1024 ? '2' : window.innerWidth < 1280 ? '3' : '4'}
+                `;
+                
+                overlay.textContent = info;
+                overlay.onclick = () => overlay.remove();
+                document.body.appendChild(overlay);
+                
+                toast({
+                  title: "CSS Debug Overlay",
+                  description: "Debug overlay active - click anywhere on screen to close"
+                });
+              }}
+            >
+              <Eye className="h-4 w-4" /> CSS Debug
+            </Button>
+            <Button 
+              variant="outline" 
               className="gap-2" 
               onClick={() => {
                 // Create a mobile test page
@@ -1996,26 +2266,46 @@ const ComprehensiveAdmin: React.FC = () => {
                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
                       <title>Mobile Image Test</title>
                       <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        body { 
+                          font-family: Arial, sans-serif; 
+                          padding: 20px; 
+                          background: #f5f5f5;
+                        }
                         .test-image { 
                           display: block; 
                           max-width: 100%; 
-                          height: auto; 
+                          height: 200px;
+                          width: 100%;
+                          object-fit: cover;
                           margin: 10px 0; 
-                          border: 1px solid #ccc; 
+                          border: 2px solid #ccc; 
+                          background: #fff;
                         }
                         .test-result { 
                           padding: 10px; 
                           margin: 5px 0; 
                           border-radius: 5px; 
+                          font-size: 14px;
                         }
-                        .success { background-color: #d4edda; }
-                        .error { background-color: #f8d7da; }
-                        .info { background-color: #d1ecf1; }
+                        .success { background-color: #d4edda; color: #155724; }
+                        .error { background-color: #f8d7da; color: #721c24; }
+                        .info { background-color: #d1ecf1; color: #0c5460; }
+                        .loading { background-color: #fff3cd; color: #856404; }
+                        h1 { color: #333; text-align: center; }
+                        .stats { 
+                          background: white; 
+                          padding: 15px; 
+                          border-radius: 8px; 
+                          margin: 15px 0;
+                          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
                       </style>
                     </head>
                     <body>
-                      <h1>Mobile Image Loading Test</h1>
+                      <h1>🔧 Mobile Image Test</h1>
+                      <div class="stats">
+                        <strong>Testing ${testImages.length} images...</strong>
+                      </div>
                       <div id="results"></div>
                       <div id="images"></div>
                       
@@ -2024,29 +2314,95 @@ const ComprehensiveAdmin: React.FC = () => {
                         const images = document.getElementById('images');
                         const testImages = ${JSON.stringify(testImages)};
                         
+                        let loadedCount = 0;
+                        let failedCount = 0;
+                        
                         // Device info
-                        results.innerHTML += '<div class="test-result info">Device: ' + navigator.userAgent + '</div>';
-                        results.innerHTML += '<div class="test-result info">Online: ' + navigator.onLine + '</div>';
-                        results.innerHTML += '<div class="test-result info">Screen: ' + screen.width + 'x' + screen.height + '</div>';
+                        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                        results.innerHTML += '<div class="test-result info"><strong>Device:</strong> ' + (isMobile ? 'Mobile' : 'Desktop') + '</div>';
+                        results.innerHTML += '<div class="test-result info"><strong>User Agent:</strong> ' + navigator.userAgent + '</div>';
+                        results.innerHTML += '<div class="test-result info"><strong>Online:</strong> ' + navigator.onLine + '</div>';
+                        results.innerHTML += '<div class="test-result info"><strong>Screen:</strong> ' + screen.width + 'x' + screen.height + '</div>';
+                        results.innerHTML += '<div class="test-result info"><strong>Viewport:</strong> ' + window.innerWidth + 'x' + window.innerHeight + '</div>';
+                        
+                        function updateStats() {
+                          const total = testImages.length;
+                          const pending = total - loadedCount - failedCount;
+                          document.querySelector('.stats').innerHTML = 
+                            '<strong>Results:</strong> ' + 
+                            loadedCount + ' loaded, ' + 
+                            failedCount + ' failed, ' + 
+                            pending + ' pending';
+                        }
                         
                         testImages.forEach((image, index) => {
+                          const container = document.createElement('div');
+                          container.style.marginBottom = '20px';
+                          
+                          const title = document.createElement('div');
+                          title.innerHTML = '<strong>Image ' + (index + 1) + ':</strong> ' + image.title;
+                          title.style.marginBottom = '5px';
+                          container.appendChild(title);
+                          
                           const img = document.createElement('img');
                           img.className = 'test-image';
                           img.alt = image.title;
+                          img.style.border = '2px solid orange';
+                          
+                          // Add multiple fallback strategies for mobile
+                          img.crossOrigin = 'anonymous';
+                          img.referrerPolicy = 'no-referrer';
+                          img.loading = 'eager'; // Force immediate loading for test
+                          
+                          const resultDiv = document.createElement('div');
+                          resultDiv.className = 'test-result loading';
+                          resultDiv.textContent = '⏳ Loading...';
                           
                           img.onload = function() {
-                            results.innerHTML += '<div class="test-result success">✓ Image ' + (index + 1) + ' loaded: ' + image.title + '</div>';
-                            console.log('Image loaded:', image.src);
+                            loadedCount++;
+                            resultDiv.className = 'test-result success';
+                            resultDiv.innerHTML = '✅ <strong>SUCCESS!</strong> Loaded successfully<br><small>' + image.src + '</small>';
+                            img.style.border = '2px solid green';
+                            updateStats();
+                            console.log('✅ Mobile test - Image loaded:', image.src);
                           };
                           
-                          img.onerror = function() {
-                            results.innerHTML += '<div class="test-result error">✗ Image ' + (index + 1) + ' failed: ' + image.title + '</div>';
-                            console.error('Image failed:', image.src);
+                          img.onerror = function(error) {
+                            failedCount++;
+                            resultDiv.className = 'test-result error';
+                            resultDiv.innerHTML = '❌ <strong>FAILED!</strong> Could not load<br><small>' + image.src + '</small><br><em>Error: ' + error.type + '</em>';
+                            img.style.border = '2px solid red';
+                            img.style.display = 'none'; // Hide broken image
+                            updateStats();
+                            console.error('❌ Mobile test - Image failed:', image.src, error);
                           };
                           
-                          img.src = image.src;
-                          images.appendChild(img);
+                          // Try loading with cache busting
+                          const cacheBustUrl = image.src + (image.src.includes('?') ? '&' : '?') + 'mobile-test=' + Date.now();
+                          img.src = cacheBustUrl;
+                          
+                          container.appendChild(img);
+                          container.appendChild(resultDiv);
+                          images.appendChild(container);
                         });
+                        
+                        // Final summary after 10 seconds
+                        setTimeout(() => {
+                          const summary = document.createElement('div');
+                          summary.className = 'stats';
+                          summary.innerHTML = '<h3>🎯 Final Results:</h3>' +
+                            '<p><strong>Successfully Loaded:</strong> ' + loadedCount + '/' + testImages.length + '</p>' +
+                            '<p><strong>Failed to Load:</strong> ' + failedCount + '/' + testImages.length + '</p>' +
+                            '<p><strong>Success Rate:</strong> ' + Math.round((loadedCount / testImages.length) * 100) + '%</p>';
+                          
+                          if (failedCount > 0) {
+                            summary.innerHTML += '<p style="color: red;"><strong>⚠️ Issues detected!</strong> Some images are not loading on mobile.</p>';
+                          } else {
+                            summary.innerHTML += '<p style="color: green;"><strong>✅ All good!</strong> All images loaded successfully.</p>';
+                          }
+                          
+                          images.appendChild(summary);
+                        }, 10000);
                       </script>
                     </body>
                     </html>
