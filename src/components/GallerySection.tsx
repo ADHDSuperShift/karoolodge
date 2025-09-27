@@ -81,8 +81,27 @@ const GallerySection: React.FC = () => {
                 src={image.src}
                 alt={image.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                loading="lazy"
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
                 onError={(event) => {
-                  (event.currentTarget as HTMLImageElement).src = '/placeholder.svg';
+                  const img = event.currentTarget as HTMLImageElement;
+                  console.error('Image failed to load:', image.src);
+                  console.error('User agent:', navigator.userAgent);
+                  console.error('Network state:', navigator.onLine ? 'online' : 'offline');
+                  console.error('Image natural dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+                  
+                  // Try cache-busting if this is the first failure
+                  if (!img.src.includes('?cache-bust=')) {
+                    const cacheBustUrl = `${image.src}${image.src.includes('?') ? '&' : '?'}cache-bust=${Date.now()}`;
+                    console.log('Trying cache-bust:', cacheBustUrl);
+                    img.src = cacheBustUrl;
+                  } else {
+                    img.src = '/placeholder.svg';
+                  }
+                }}
+                onLoad={() => {
+                  console.log('Image loaded successfully:', image.src);
                 }}
               />
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-end">
@@ -123,8 +142,24 @@ const GallerySection: React.FC = () => {
                 src={filteredImages[selectedImage].src}
                 alt={filteredImages[selectedImage].title}
                 className="max-w-full max-h-full object-contain"
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
                 onError={(event) => {
-                  (event.currentTarget as HTMLImageElement).src = '/placeholder.svg';
+                  const img = event.currentTarget as HTMLImageElement;
+                  console.error('Lightbox image failed to load:', filteredImages[selectedImage].src);
+                  console.error('User agent:', navigator.userAgent);
+                  
+                  // Try cache-busting if this is the first failure
+                  if (!img.src.includes('?cache-bust=')) {
+                    const cacheBustUrl = `${filteredImages[selectedImage].src}${filteredImages[selectedImage].src.includes('?') ? '&' : '?'}cache-bust=${Date.now()}`;
+                    console.log('Lightbox trying cache-bust:', cacheBustUrl);
+                    img.src = cacheBustUrl;
+                  } else {
+                    img.src = '/placeholder.svg';
+                  }
+                }}
+                onLoad={() => {
+                  console.log('Lightbox image loaded successfully:', filteredImages[selectedImage].src);
                 }}
               />
               

@@ -85,6 +85,7 @@ interface GlobalStateContextType extends GlobalState {
   addGalleryImage: (image: GalleryImage) => void;
   updateGalleryImage: (image: GalleryImage) => void;
   deleteGalleryImage: (id: number) => void;
+  forceDeduplicateGallery: () => void;
   
   // Section backgrounds management
   updateSectionBackgrounds: (backgrounds: SectionBackground[]) => void;
@@ -633,6 +634,7 @@ const GlobalStateContext = createContext<GlobalStateContextType>({
   addGalleryImage: () => {},
   updateGalleryImage: () => {},
   deleteGalleryImage: () => {},
+  forceDeduplicateGallery: () => {},
   updateSectionBackgrounds: () => {},
   updateSectionBackground: () => {},
   updateWineCollection: () => {},
@@ -882,14 +884,63 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
   // Gallery management functions
   const updateGalleryImages = (images: GalleryImage[]) => {
     console.log('GlobalState: updateGalleryImages called with', images.length, 'images');
-    setState(prev => ({ ...prev, galleryImages: images }));
+    
+    // Deduplicate images based on src URL
+    const seenUrls = new Set();
+    const uniqueImages = images.filter(img => {
+      if (seenUrls.has(img.src)) {
+        console.warn('Removing duplicate in updateGalleryImages:', img.title || img.id);
+        return false;
+      }
+      seenUrls.add(img.src);
+      return true;
+    });
+    
+    console.log(`After deduplication: ${uniqueImages.length} unique images (was ${images.length})`);
+    
+    setState(prev => ({ ...prev, galleryImages: uniqueImages }));
     
     // Save gallery to localStorage
     try {
-      localStorage.setItem('karoo-gallery-state', JSON.stringify(images));
+      localStorage.setItem('karoo-gallery-state', JSON.stringify(uniqueImages));
     } catch (error) {
       console.error('Failed to save gallery to localStorage:', error);
     }
+  };
+
+  const forceDeduplicateGallery = () => {
+    setState(prev => {
+      const seen = new Set<string>();
+      const uniqueImages = prev.galleryImages.filter(image => {
+        const fixedUrl = fixUrlProtocol(image.src);
+        if (seen.has(fixedUrl)) {
+          console.log('Force deduplication: Removing duplicate:', fixedUrl);
+          return false;
+        }
+        seen.add(fixedUrl);
+        return true;
+      });
+      
+      const removedCount = prev.galleryImages.length - uniqueImages.length;
+      if (removedCount > 0) {
+        console.log(`Force deduplication: Removed ${removedCount} duplicates. ${uniqueImages.length} unique images remain.`);
+        
+        // Save to localStorage
+        try {
+          localStorage.setItem('karoo-gallery-state', JSON.stringify(uniqueImages));
+        } catch (error) {
+          console.error('Failed to save gallery to localStorage:', error);
+        }
+        
+        return {
+          ...prev,
+          galleryImages: uniqueImages
+        };
+      } else {
+        console.log('Force deduplication: No duplicates found.');
+        return prev;
+      }
+    });
   };
 
   const addGalleryImage = (image: GalleryImage) => {
@@ -1204,6 +1255,7 @@ const hydrateState = (saved: Partial<GlobalState> | null): GlobalState => {
     addGalleryImage,
     updateGalleryImage,
     deleteGalleryImage,
+    forceDeduplicateGallery,
     updateSectionBackgrounds,
     updateSectionBackground,
     updateWineCollection,

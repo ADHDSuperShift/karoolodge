@@ -903,6 +903,7 @@ const ComprehensiveAdmin: React.FC = () => {
     updateGalleryImages,
     deleteGalleryImage,
     addGalleryImage,
+    forceDeduplicateGallery,
     wineCollection,
     updateWineCollection,
     addWine,
@@ -944,6 +945,28 @@ const ComprehensiveAdmin: React.FC = () => {
 
   useEffect(() => {
     setLocalGallery(galleryImages);
+    // Debug gallery changes
+    const urls = galleryImages.map(img => img.src);
+    const uniqueUrls = [...new Set(urls)];
+    if (urls.length !== uniqueUrls.length) {
+      console.warn(`Gallery has duplicates: ${urls.length} total, ${uniqueUrls.length} unique`);
+      console.log('Duplicate URLs found:', urls.filter((url, index) => urls.indexOf(url) !== index));
+    } else {
+      console.log(`Gallery is clean: ${urls.length} unique images`);
+    }
+    
+    // Test a few URLs for accessibility
+    if (urls.length > 0) {
+      console.log('Testing first few image URLs for accessibility...');
+      urls.slice(0, 3).forEach(async (url, index) => {
+        try {
+          const response = await fetch(url, { method: 'HEAD' });
+          console.log(`Image ${index + 1} status:`, response.status, response.statusText, url);
+        } catch (error) {
+          console.error(`Image ${index + 1} failed:`, error, url);
+        }
+      });
+    }
   }, [galleryImages]);
 
   useEffect(() => {
@@ -1904,6 +1927,180 @@ const ComprehensiveAdmin: React.FC = () => {
               }}
             >
               <Eye className="h-4 w-4" /> Debug
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={() => {
+                console.log('Before force deduplication:', galleryImages.length, 'images');
+                forceDeduplicateGallery();
+                toast({
+                  title: "Gallery Deduplication",
+                  description: "Force deduplication completed. Check console for details."
+                });
+              }}
+            >
+              <Trash2 className="h-4 w-4" /> Fix Duplicates
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 text-red-600" 
+              onClick={async () => {
+                console.log('Testing all gallery images for accessibility...');
+                const workingImages = [];
+                
+                for (const image of galleryImages) {
+                  try {
+                    const response = await fetch(image.src, { method: 'HEAD' });
+                    if (response.ok) {
+                      workingImages.push(image);
+                      console.log('✓ Working:', image.src);
+                    } else {
+                      console.log('✗ Broken (', response.status, '):', image.src);
+                    }
+                  } catch (error) {
+                    console.log('✗ Failed:', image.src, error);
+                  }
+                }
+                
+                if (workingImages.length !== galleryImages.length) {
+                  const removedCount = galleryImages.length - workingImages.length;
+                  updateGalleryImages(workingImages);
+                  toast({
+                    title: "Broken Images Removed",
+                    description: `Removed ${removedCount} broken images. ${workingImages.length} working images remain.`
+                  });
+                } else {
+                  toast({
+                    title: "All Images Working",
+                    description: "No broken images found."
+                  });
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" /> Remove Broken
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={() => {
+                // Create a mobile test page
+                const testWindow = window.open('', '_blank');
+                if (testWindow) {
+                  const testImages = galleryImages.slice(0, 5);
+                  const html = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                      <meta charset="UTF-8">
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                      <title>Mobile Image Test</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .test-image { 
+                          display: block; 
+                          max-width: 100%; 
+                          height: auto; 
+                          margin: 10px 0; 
+                          border: 1px solid #ccc; 
+                        }
+                        .test-result { 
+                          padding: 10px; 
+                          margin: 5px 0; 
+                          border-radius: 5px; 
+                        }
+                        .success { background-color: #d4edda; }
+                        .error { background-color: #f8d7da; }
+                        .info { background-color: #d1ecf1; }
+                      </style>
+                    </head>
+                    <body>
+                      <h1>Mobile Image Loading Test</h1>
+                      <div id="results"></div>
+                      <div id="images"></div>
+                      
+                      <script>
+                        const results = document.getElementById('results');
+                        const images = document.getElementById('images');
+                        const testImages = ${JSON.stringify(testImages)};
+                        
+                        // Device info
+                        results.innerHTML += '<div class="test-result info">Device: ' + navigator.userAgent + '</div>';
+                        results.innerHTML += '<div class="test-result info">Online: ' + navigator.onLine + '</div>';
+                        results.innerHTML += '<div class="test-result info">Screen: ' + screen.width + 'x' + screen.height + '</div>';
+                        
+                        testImages.forEach((image, index) => {
+                          const img = document.createElement('img');
+                          img.className = 'test-image';
+                          img.alt = image.title;
+                          
+                          img.onload = function() {
+                            results.innerHTML += '<div class="test-result success">✓ Image ' + (index + 1) + ' loaded: ' + image.title + '</div>';
+                            console.log('Image loaded:', image.src);
+                          };
+                          
+                          img.onerror = function() {
+                            results.innerHTML += '<div class="test-result error">✗ Image ' + (index + 1) + ' failed: ' + image.title + '</div>';
+                            console.error('Image failed:', image.src);
+                          };
+                          
+                          img.src = image.src;
+                          images.appendChild(img);
+                        });
+                      </script>
+                    </body>
+                    </html>
+                  `;
+                  testWindow.document.write(html);
+                  testWindow.document.close();
+                }
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Mobile Test Page
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={async () => {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                console.log('Mobile Image Test Starting...', { isMobile });
+                
+                const testResults = [];
+                
+                for (let i = 0; i < Math.min(3, galleryImages.length); i++) {
+                  const image = galleryImages[i];
+                  console.log(`Testing image ${i + 1}:`, image.src);
+                  
+                  try {
+                    // Test with fetch
+                    const fetchResponse = await fetch(image.src, { method: 'HEAD' });
+                    console.log(`Fetch test ${i + 1}:`, fetchResponse.status, fetchResponse.statusText);
+                    
+                    // Test with Image object
+                    const imgElement = new Image();
+                    const loadPromise = new Promise((resolve, reject) => {
+                      imgElement.onload = () => resolve('loaded');
+                      imgElement.onerror = (error) => reject(error);
+                      imgElement.src = image.src;
+                    });
+                    
+                    const imageResult = await Promise.race([
+                      loadPromise,
+                      new Promise((_, reject) => setTimeout(() => reject('timeout'), 10000))
+                    ]);
+                    
+                    console.log(`Image load test ${i + 1}:`, imageResult);
+                    testResults.push({ url: image.src, status: 'success' });
+                  } catch (error) {
+                    console.error(`Image test ${i + 1} failed:`, error);
+                    testResults.push({ url: image.src, status: 'failed', error: error.toString() });
+                  }
+                }
+                
+                alert(`Mobile Image Test Complete!\nResults: ${testResults.map(r => `${r.status}`).join(', ')}\nCheck console for details.`);
+              }}
+            >
+              <ImageIcon className="h-4 w-4" /> Test Mobile Images
             </Button>
             <Button variant="outline" className="gap-2" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" /> Sign out
