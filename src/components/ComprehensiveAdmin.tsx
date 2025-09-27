@@ -41,7 +41,8 @@ import {
   FileText,
   Layout,
   Settings,
-  Edit3
+  Edit3,
+  Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -2315,6 +2316,15 @@ CSS Breakpoints Test:
 - XL (≥ 1280px): ${window.innerWidth >= 1280 ? '✅ ACTIVE' : '❌ inactive'}
 
 Grid Columns Expected: ${window.innerWidth < 640 ? '1' : window.innerWidth < 1024 ? '2' : window.innerWidth < 1280 ? '3' : '4'}
+
+🎯 MOBILE TEST INSTRUCTIONS:
+1. Use browser dev tools (F12 or right-click inspect)
+2. Click "Toggle device toolbar" (mobile icon) or Ctrl+Shift+M / Cmd+Shift+M
+3. Select "iPhone SE" or manually set to 375x667px
+4. REFRESH the page at true mobile size (very important!)
+5. Check if images appear correctly
+
+📱 Current Status: ${window.innerWidth < 640 ? '✅ TRUE MOBILE SIZE - Test now!' : '❌ TABLET/DESKTOP SIZE - Resize first!'}
                 `;
                 
                 overlay.textContent = info;
@@ -2328,6 +2338,86 @@ Grid Columns Expected: ${window.innerWidth < 640 ? '1' : window.innerWidth < 102
               }}
             >
               <Eye className="h-4 w-4" /> CSS Debug
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-green-100" 
+              onClick={() => {
+                // Open a mobile test window
+                const testWindow = window.open('', 'MobileTest', 'width=375,height=667,resizable=yes,scrollbars=yes');
+                if (testWindow) {
+                  testWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                      <meta charset="UTF-8">
+                      <meta name="viewport" content="width=375, initial-scale=1.0, maximum-scale=1.0">
+                      <title>Mobile Image Test - Karoo Lodge</title>
+                      <script src="https://cdn.tailwindcss.com"></script>
+                    </head>
+                    <body class="bg-gray-50">
+                      <div class="p-4">
+                        <h1 class="text-2xl font-bold mb-4">📱 Mobile Image Test</h1>
+                        <p class="mb-4">This window is sized to 375px (iPhone width)</p>
+                        <p class="mb-4">Viewport: <span id="viewport"></span></p>
+                        
+                        <h2 class="text-xl font-semibold mb-4">Gallery Images Test:</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          ${galleryImages.slice(0, 6).map((img, i) => `
+                            <div class="bg-white rounded-lg overflow-hidden shadow">
+                              <img 
+                                src="${img.src}" 
+                                alt="${img.title}"
+                                class="w-full h-48 object-cover"
+                                onload="console.log('✅ Image ${i+1} loaded')"
+                                onerror="console.log('❌ Image ${i+1} failed'); this.src='/placeholder.svg'"
+                              >
+                              <div class="p-2">
+                                <p class="text-sm font-medium">${img.title}</p>
+                                <p class="text-xs text-gray-500">${img.category}</p>
+                              </div>
+                            </div>
+                          `).join('')}
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-blue-50 rounded">
+                          <h3 class="font-semibold">Test Results:</h3>
+                          <p>Mobile breakpoint active: <span id="mobile-check"></span></p>
+                          <p>Images loaded: <span id="loaded-count">0</span>/6</p>
+                        </div>
+                      </div>
+                      
+                      <script>
+                        // Update viewport display
+                        document.getElementById('viewport').textContent = window.innerWidth + 'x' + window.innerHeight;
+                        
+                        // Check mobile breakpoint
+                        const isMobile = window.innerWidth < 640;
+                        document.getElementById('mobile-check').textContent = isMobile ? '✅ YES' : '❌ NO';
+                        document.getElementById('mobile-check').className = isMobile ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+                        
+                        // Count loaded images
+                        let loadedCount = 0;
+                        document.querySelectorAll('img').forEach(img => {
+                          img.addEventListener('load', () => {
+                            loadedCount++;
+                            document.getElementById('loaded-count').textContent = loadedCount;
+                          });
+                        });
+                      </script>
+                    </body>
+                    </html>
+                  `);
+                  testWindow.document.close();
+                }
+                
+                toast({
+                  title: "Mobile Test Window Opened",
+                  description: "Check the new 375px window to test mobile image display"
+                });
+              }}
+            >
+              <Smartphone className="h-4 w-4" /> Open Mobile Test Window
             </Button>
             <Button 
               variant="outline" 
