@@ -2047,32 +2047,35 @@ const ComprehensiveAdmin: React.FC = () => {
               onClick={async () => {
                 toast({
                   title: "Mobile Fix Applied",
-                  description: "Refreshing gallery with mobile optimizations..."
+                  description: "Applying mobile optimizations..."
                 });
                 
-                // Force a gallery refresh with mobile-specific optimizations
+                // Apply mobile optimizations WITHOUT clearing gallery
                 const currentImages = [...galleryImages];
                 
-                // Clear and reload to force fresh image loading
-                updateGalleryImages([]);
-                
-                setTimeout(() => {
-                  // Add back images with mobile-optimized URLs
-                  const mobileOptimizedImages = currentImages.map(img => ({
-                    ...img,
-                    src: img.src.includes('?') 
-                      ? `${img.src}&mobile=1&t=${Date.now()}`
-                      : `${img.src}?mobile=1&t=${Date.now()}`
-                  }));
-                  
-                  updateGalleryImages(mobileOptimizedImages);
-                  console.log('Applied mobile optimizations to', mobileOptimizedImages.length, 'images');
-                  
+                if (currentImages.length === 0) {
                   toast({
-                    title: "Mobile Fix Complete",
-                    description: "Gallery refreshed with mobile optimizations. Test on mobile now!"
+                    title: "No Images to Fix",
+                    description: "Gallery is empty. Upload images first."
                   });
-                }, 1000);
+                  return;
+                }
+                
+                // Add back images with mobile-optimized URLs
+                const mobileOptimizedImages = currentImages.map(img => ({
+                  ...img,
+                  src: img.src.includes('?') 
+                    ? `${img.src}&mobile=1&t=${Date.now()}`
+                    : `${img.src}?mobile=1&t=${Date.now()}`
+                }));
+                
+                updateGalleryImages(mobileOptimizedImages);
+                console.log('Applied mobile optimizations to', mobileOptimizedImages.length, 'images');
+                
+                toast({
+                  title: "Mobile Fix Complete",
+                  description: "Gallery refreshed with mobile optimizations. Test on mobile now!"
+                });
               }}
             >
               <ImageIcon className="h-4 w-4" /> Fix Mobile
@@ -2604,7 +2607,7 @@ Grid Columns Expected: ${window.innerWidth < 640 ? '1' : window.innerWidth < 102
               onClick={() => {
                 console.log('=== FORCE DOM REFRESH ===');
                 
-                // Clear phantom DOM elements
+                // Analyze DOM elements without clearing gallery
                 const domImages = document.querySelectorAll('img[src*="karoolodge"]');
                 console.log('Found', domImages.length, 'DOM images to analyze');
                 
@@ -2625,26 +2628,28 @@ Grid Columns Expected: ${window.innerWidth < 640 ? '1' : window.innerWidth < 102
                   
                   // If image is not in gallery state and appears to be broken/phantom
                   if (!isInGalleryState && (imgElement.naturalWidth === 0 || !imgElement.complete)) {
-                    console.log(`Removing phantom DOM image ${index + 1}:`, imgElement.src);
-                    // Don't actually remove DOM elements as this could break the UI
-                    // Instead, replace with placeholder
+                    console.log(`Clearing phantom DOM image ${index + 1}:`, imgElement.src);
+                    // Replace phantom images with placeholder
                     imgElement.src = '/placeholder.svg';
                     imgElement.alt = 'Cleared phantom image';
                     removedCount++;
                   }
                 });
                 
-                // Force re-render by triggering a state change
-                const currentImages = [...galleryImages];
-                updateGalleryImages([]);
+                // Only force re-render if we have gallery images to preserve
+                if (galleryImages.length > 0) {
+                  console.log('Preserving gallery state with', galleryImages.length, 'images');
+                  // Force a gentle re-render by updating with same data
+                  const currentImages = [...galleryImages];
+                  updateGalleryImages([...currentImages]);
+                } else {
+                  console.log('No gallery images to preserve - skipping state refresh');
+                }
                 
-                setTimeout(() => {
-                  updateGalleryImages(currentImages);
-                  toast({
-                    title: "DOM Refreshed",
-                    description: `Cleared ${removedCount} phantom images and forced re-render. Check console for details.`
-                  });
-                }, 100);
+                toast({
+                  title: "DOM Analysis Complete",
+                  description: `Found ${domImages.length} DOM images, cleared ${removedCount} phantoms. Gallery preserved.`
+                });
                 
                 console.log('Gallery state images:', galleryImages.length);
                 console.log('DOM images found:', domImages.length);
