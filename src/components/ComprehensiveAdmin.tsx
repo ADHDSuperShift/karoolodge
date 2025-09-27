@@ -2534,72 +2534,71 @@ Grid Columns Expected: ${window.innerWidth < 640 ? '1' : window.innerWidth < 102
             <Button 
               variant="outline" 
               className="gap-2 bg-red-100" 
-              onClick={async () => {
-                toast({
-                  title: "Finding 404 Images",
-                  description: "Checking all images for 404 errors..."
+              onClick={() => {
+                console.log('=== MOBILE IMAGE EMERGENCY DIAGNOSTIC ===');
+                
+                // Test ALL images on the page
+                const allImages = document.querySelectorAll('img');
+                console.log('Total images found on page:', allImages.length);
+                
+                let workingImages = 0;
+                let brokenImages = 0;
+                let s3Images = 0;
+                
+                allImages.forEach((img, index) => {
+                  const imgElement = img as HTMLImageElement;
+                  const isLoaded = imgElement.complete && imgElement.naturalHeight > 0;
+                  const isS3 = imgElement.src.includes('karoolodge') || imgElement.src.includes('amazonaws');
+                  const isPlaceholder = imgElement.src.includes('placeholder');
+                  
+                  if (isS3) s3Images++;
+                  
+                  if (isLoaded && !isPlaceholder) {
+                    workingImages++;
+                    console.log(`✅ Working image ${index + 1}:`, imgElement.src.split('/').pop());
+                  } else {
+                    brokenImages++;
+                    console.log(`❌ Broken image ${index + 1}:`, imgElement.src.split('/').pop(), 
+                      `(complete: ${imgElement.complete}, size: ${imgElement.naturalWidth}x${imgElement.naturalHeight})`);
+                  }
                 });
                 
-                console.log('=== FINDING 404 IMAGES ===');
-                const brokenImages = [];
-                const workingImages = [];
+                console.log('\n=== SUMMARY ===');
+                console.log('Total images:', allImages.length);
+                console.log('S3 images:', s3Images);
+                console.log('Working images:', workingImages);
+                console.log('Broken images:', brokenImages);
+                console.log('Mobile user agent:', /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
                 
-                for (let i = 0; i < galleryImages.length; i++) {
-                  const image = galleryImages[i];
-                  console.log(`Testing image ${i + 1}/${galleryImages.length}:`, image.src);
+                // Try to fix all broken S3 images
+                let fixAttempts = 0;
+                allImages.forEach((img) => {
+                  const imgElement = img as HTMLImageElement;
+                  const isS3 = imgElement.src.includes('karoolodge') || imgElement.src.includes('amazonaws');
+                  const isLoaded = imgElement.complete && imgElement.naturalHeight > 0;
                   
-                  try {
-                    const response = await fetch(image.src, { method: 'HEAD' });
-                    if (response.ok) {
-                      workingImages.push(image);
-                      console.log(`✅ Image ${i + 1} OK (${response.status}):`, image.title);
-                    } else {
-                      brokenImages.push({ ...image, status: response.status });
-                      console.error(`❌ Image ${i + 1} FAILED (${response.status}):`, image.title, image.src);
-                    }
-                  } catch (error) {
-                    brokenImages.push({ ...image, error: error.toString() });
-                    console.error(`❌ Image ${i + 1} ERROR:`, image.title, error, image.src);
+                  if (isS3 && !isLoaded && !imgElement.src.includes('placeholder')) {
+                    console.log('Attempting to fix:', imgElement.src);
+                    
+                    // Remove problematic attributes
+                    imgElement.removeAttribute('crossOrigin');
+                    imgElement.removeAttribute('referrerPolicy');
+                    imgElement.removeAttribute('loading');
+                    
+                    // Simple reload
+                    const originalSrc = imgElement.src;
+                    imgElement.src = originalSrc;
+                    fixAttempts++;
                   }
-                  
-                  // Show progress
-                  if ((i + 1) % 5 === 0 || i === galleryImages.length - 1) {
-                    toast({
-                      title: "Checking Images",
-                      description: `Tested ${i + 1}/${galleryImages.length} - Found ${brokenImages.length} broken`
-                    });
-                  }
-                }
+                });
                 
-                console.log('=== RESULTS ===');
-                console.log('Working images:', workingImages.length);
-                console.log('Broken images:', brokenImages.length);
-                console.log('Broken image details:', brokenImages);
-                
-                if (brokenImages.length > 0) {
-                  const removeConfirm = confirm(
-                    `Found ${brokenImages.length} broken images that return 404/403 errors.\n\n` +
-                    `Broken images:\n${brokenImages.map(img => `- ${img.title} (${img.status || 'ERROR'})`).join('\n').substring(0, 300)}...\n\n` +
-                    `Do you want to remove these broken images from the gallery?`
-                  );
-                  
-                  if (removeConfirm) {
-                    updateGalleryImages(workingImages);
-                    toast({
-                      title: "Broken Images Removed",
-                      description: `Removed ${brokenImages.length} broken images. ${workingImages.length} working images remain.`
-                    });
-                    console.log('Removed broken images:', brokenImages.map(img => img.src));
-                  }
-                } else {
-                  toast({
-                    title: "All Images Working",
-                    description: "No 404 errors found! All images are accessible."
-                  });
-                }
+                toast({
+                  title: "Mobile Image Diagnostic Complete",
+                  description: `Found ${allImages.length} images: ${workingImages} working, ${brokenImages} broken, ${s3Images} from S3. Fixed ${fixAttempts} images.`
+                });
               }}
             >
-              <ImageIcon className="h-4 w-4" /> Find 404s
+              <ImageIcon className="h-4 w-4" /> Mobile Image Emergency
             </Button>
             <Button 
               variant="outline" 

@@ -18,7 +18,20 @@ const GallerySection: React.FC = () => {
 
   const filteredImages = activeFilter === 'all' 
     ? galleryImages 
-    : galleryImages.filter(img => img.category === activeFilter);
+    : galleryImages.filter(img => img.category === activeFilter || !img.category); // Show uncategorized images too
+
+  // Debug logging for mobile issues
+  React.useEffect(() => {
+    console.log('=== GALLERY RENDERING DEBUG ===');
+    console.log('Total gallery images:', galleryImages.length);
+    console.log('Active filter:', activeFilter);
+    console.log('Filtered images:', filteredImages.length);
+    console.log('Gallery images details:', galleryImages);
+    console.log('Filtered images details:', filteredImages);
+    console.log('Mobile user agent:', navigator.userAgent);
+    console.log('Screen dimensions:', window.screen.width, 'x', window.screen.height);
+    console.log('Viewport dimensions:', window.innerWidth, 'x', window.innerHeight);
+  }, [galleryImages, filteredImages, activeFilter]);
 
   const openLightbox = (index: number) => {
     setSelectedImage(index);
@@ -71,6 +84,23 @@ const GallerySection: React.FC = () => {
 
         {/* Image Grid - Mobile-first responsive design */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {filteredImages.length === 0 && galleryImages.length > 0 && (
+            <div className="col-span-full text-center py-8 bg-yellow-50 rounded-lg border border-yellow-200">
+              <p className="text-yellow-800">
+                🔍 Debug: {galleryImages.length} total images, but {filteredImages.length} shown with "{activeFilter}" filter
+              </p>
+              <p className="text-sm text-yellow-600 mt-2">
+                Image categories: {galleryImages.map(img => img.category || 'none').join(', ')}
+              </p>
+            </div>
+          )}
+          
+          {filteredImages.length === 0 && galleryImages.length === 0 && (
+            <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
+              <p className="text-gray-600">No images available</p>
+            </div>
+          )}
+          
           {filteredImages.map((image, index) => (
             <div
               key={image.id}
@@ -93,88 +123,11 @@ const GallerySection: React.FC = () => {
                 src={image.src}
                 alt={image.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                loading="lazy"
-                crossOrigin="anonymous"
-                referrerPolicy="no-referrer"
-                style={{
-                  // Mobile-specific CSS fixes
-                  imageRendering: 'auto',
-                  backfaceVisibility: 'hidden',
-                  transform: 'translateZ(0)', // Force hardware acceleration
-                  // Ensure image is always visible
-                  display: 'block !important',
-                  visibility: 'visible !important',
-                  opacity: '1 !important',
-                  // Mobile-safe dimensions
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  width: '100%',
-                  height: '100%'
-                }}
                 onError={(event) => {
                   const img = event.currentTarget as HTMLImageElement;
                   console.error('Image failed to load:', image.src);
-                  console.error('User agent:', navigator.userAgent);
-                  console.error('Network state:', navigator.onLine ? 'online' : 'offline');
-                  console.error('Image natural dimensions:', img.naturalWidth, 'x', img.naturalHeight);
-                  
-                  // Detect iOS/Safari for specific fixes
-                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                  const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-                  
-                  // Mobile-specific retry strategies
-                  if (!img.dataset.retryCount) {
-                    img.dataset.retryCount = '1';
-                    
-                    if (isIOS || isSafari) {
-                      // iOS/Safari Strategy: Remove all special attributes
-                      console.log('iOS/Safari detected - trying simplified loading');
-                      img.removeAttribute('crossOrigin');
-                      img.removeAttribute('referrerPolicy');
-                      img.removeAttribute('loading');
-                      img.src = image.src;
-                    } else {
-                      // Strategy 1: Try without CORS for mobile
-                      const tempImg = new Image();
-                      tempImg.onload = () => {
-                        console.log('Retry without CORS successful for:', image.src);
-                        img.crossOrigin = '';
-                        img.src = image.src;
-                      };
-                      tempImg.onerror = () => {
-                        // Strategy 2: Try with cache-busting
-                        const cacheBustUrl = `${image.src}${image.src.includes('?') ? '&' : '?'}cb=${Date.now()}`;
-                        console.log('Trying cache-bust for mobile:', cacheBustUrl);
-                        img.src = cacheBustUrl;
-                      };
-                      tempImg.src = image.src;
-                    }
-                  } else if (img.dataset.retryCount === '1') {
-                    img.dataset.retryCount = '2';
-                    // Strategy 3: Force HTTPS and cache-busting
-                    let fixedUrl = image.src;
-                    if (fixedUrl.startsWith('http:')) {
-                      fixedUrl = fixedUrl.replace('http:', 'https:');
-                      console.log('Converting HTTP to HTTPS for mobile:', fixedUrl);
-                    }
-                    const cacheBustUrl = `${fixedUrl}${fixedUrl.includes('?') ? '&' : '?'}mobile=${Date.now()}`;
-                    img.src = cacheBustUrl;
-                  } else if (img.dataset.retryCount === '2') {
-                    img.dataset.retryCount = '3';
-                    // Strategy 4: Try original URL one more time with minimal attributes
-                    img.removeAttribute('crossOrigin');
-                    img.removeAttribute('referrerPolicy');
-                    img.removeAttribute('loading');
-                    img.style.display = 'block';
-                    img.style.visibility = 'visible';
-                    img.src = image.src;
-                    console.log('Final retry with minimal attributes:', image.src);
-                  } else {
-                    // Final fallback
-                    img.src = '/placeholder.svg';
-                    img.alt = `${image.title} (loading failed)`;
-                    console.error('All retry strategies failed for:', image.src);
-                  }
+                  // Simple fallback like room images
+                  img.src = '/placeholder.svg';
                 }}
                 onLoad={() => {
                   console.log('Image loaded successfully:', image.src);
@@ -218,21 +171,10 @@ const GallerySection: React.FC = () => {
                 src={filteredImages[selectedImage].src}
                 alt={filteredImages[selectedImage].title}
                 className="max-w-full max-h-full object-contain"
-                crossOrigin="anonymous"
-                referrerPolicy="no-referrer"
                 onError={(event) => {
                   const img = event.currentTarget as HTMLImageElement;
                   console.error('Lightbox image failed to load:', filteredImages[selectedImage].src);
-                  console.error('User agent:', navigator.userAgent);
-                  
-                  // Try cache-busting if this is the first failure
-                  if (!img.src.includes('?cache-bust=')) {
-                    const cacheBustUrl = `${filteredImages[selectedImage].src}${filteredImages[selectedImage].src.includes('?') ? '&' : '?'}cache-bust=${Date.now()}`;
-                    console.log('Lightbox trying cache-bust:', cacheBustUrl);
-                    img.src = cacheBustUrl;
-                  } else {
-                    img.src = '/placeholder.svg';
-                  }
+                  img.src = '/placeholder.svg';
                 }}
                 onLoad={() => {
                   console.log('Lightbox image loaded successfully:', filteredImages[selectedImage].src);
